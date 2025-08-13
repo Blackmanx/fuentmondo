@@ -1,0 +1,12 @@
+{
+    "header": {
+        "token": "token",
+        "userid": "userid"
+    },
+    "query": {
+        "championshipId": "championshipId",
+        "roundId": null,
+        "userteamId": "userteamId"
+    },
+    "answer": {}
+}
