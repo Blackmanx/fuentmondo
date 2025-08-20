@@ -2,50 +2,145 @@ import requests
 import json
 import copy
 import openpyxl
+import os
+import io
+import base64
+import msal
+import webbrowser
+import tkinter as tk
+import pyperclip  # <--- LIBRERÍA AÑADIDA
 from collections import defaultdict
+from dotenv import load_dotenv
 
-#
-# Carga los datos del payload desde un archivo JSON local.
-#
+# Carga las variables de entorno desde el archivo .env
+load_dotenv()
+
+# --- CONFIGURACIÓN DE MICROSOFT GRAPH (ONEDRIVE) ---
+CLIENT_ID = os.getenv("CLIENT_ID")
+GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0'
+AUTHORITY = 'https://login.microsoftonline.com/common/'
+SCOPES = ['Files.ReadWrite.All']
+ONEDRIVE_SHARE_LINK = "https://1drv.ms/x/s!AidvQapyuNp6jBKR5uMUCaBYdLl0?e=3kXyKW"
+
+# Muestra una ventana para copiar el código de autenticación.
+def show_auth_code_window(message, verification_uri):
+    """Crea una ventana con el código de autenticación para que el usuario lo copie."""
+    root = tk.Tk()
+    root.title("Código de Autenticación")
+
+    # Centrar la ventana
+    window_width = 450
+    window_height = 200
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    center_x = int(screen_width/2 - window_width / 2)
+    center_y = int(screen_height/2 - window_height / 2)
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+    root.attributes('-topmost', True)
+
+    try:
+        user_code = message.split("enter the code ")[1].split(" to authenticate")[0]
+    except IndexError:
+        user_code = "No se pudo extraer el código"
+
+    def copy_and_open():
+        # --- INICIO DEL CAMBIO ---
+        pyperclip.copy(user_code) # Usamos pyperclip, que es más fiable
+        # --- FIN DEL CAMBIO ---
+        print("Código copiado al portapapeles.")
+        webbrowser.open(verification_uri)
+        root.destroy()
+
+    tk.Label(root, text="Copia este código y pégalo en la ventana del navegador que se abrirá:", wraplength=420, pady=10).pack()
+
+    code_font = ("Courier", 16, "bold")
+    code_entry = tk.Entry(root, justify='center', font=code_font, relief='flat', bd=0, highlightthickness=1)
+    code_entry.insert(0, user_code)
+    code_entry.config(state='readonly', readonlybackground='white', fg='black')
+    code_entry.pack(pady=10, ipady=5)
+
+    tk.Button(root, text="Copiar Código y Abrir Navegador", command=copy_and_open, height=2, bg="#0078D4", fg="white").pack(pady=15, padx=20, fill='x')
+
+    root.mainloop()
+
+# Obtiene un token de acceso para la API de Microsoft Graph de forma interactiva.
+def get_access_token():
+    """Se autentica de forma interactiva y obtiene un token de acceso."""
+    app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY)
+    result = None
+
+    accounts = app.get_accounts()
+    if accounts:
+        result = app.acquire_token_silent(SCOPES, account=accounts[0])
+
+    if not result:
+        flow = app.initiate_device_flow(scopes=SCOPES)
+
+        if "error" in flow:
+            print(f"\nERROR AL INICIAR LA AUTENTICACIÓN:\nError: {flow.get('error')}\nDescripción: {flow.get('error_description')}")
+            return None
+
+        show_auth_code_window(flow["message"], flow["verification_uri"])
+
+        result = app.acquire_token_by_device_flow(flow)
+
+    if "access_token" in result:
+        return result['access_token']
+    else:
+        print("Error al obtener el token de acceso:", result.get("error_description"))
+        return None
+
+# --- [Aquí van el resto de funciones del script, que no han cambiado] ---
+def encode_sharing_link(sharing_link):
+    base64_value = base64.b64encode(sharing_link.encode('utf-8')).decode('utf-8')
+    return 'u!' + base64_value.rstrip('=').replace('/', '_').replace('+', '-')
+
+def get_drive_item_from_share_link(access_token, share_url):
+    encoded_url = encode_sharing_link(share_url)
+    api_url = f"{GRAPH_API_ENDPOINT}/shares/{encoded_url}/driveItem"
+    headers = {'Authorization': f'Bearer {access_token}'}
+    response = requests.get(api_url, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    return data['parentReference']['driveId'], data['id']
+
+def download_excel_from_onedrive(access_token, drive_id, item_id):
+    api_url = f"{GRAPH_API_ENDPOINT}/drives/{drive_id}/items/{item_id}/content"
+    headers = {'Authorization': f'Bearer {access_token}'}
+    response = requests.get(api_url, headers=headers)
+    response.raise_for_status()
+    print("Excel descargado de OneDrive con éxito.")
+    return response.content
+
+def upload_excel_to_onedrive(access_token, drive_id, item_id, file_content):
+    api_url = f"{GRAPH_API_ENDPOINT}/drives/{drive_id}/items/{item_id}/content"
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+    response = requests.put(api_url, headers=headers, data=file_content)
+    response.raise_for_status()
+    print("Excel subido a OneDrive con éxito.")
+
 def cargar_payload(ruta_archivo):
-    """
-    Lee y devuelve el contenido de un archivo JSON.
-    """
     try:
         with open(ruta_archivo, 'r', encoding='utf-8') as archivo:
             return json.load(archivo)
-    except FileNotFoundError:
-        print(f"Error: El archivo '{ruta_archivo}' no se encontró.")
-        return None
-    except json.JSONDecodeError:
-        print(f"Error: El archivo '{ruta_archivo}' no tiene un formato JSON válido.")
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error al cargar '{ruta_archivo}': {e}")
         return None
 
-#
-# Realiza una petición POST a la API de Futmondo con el payload proporcionado.
-#
 def llamar_api(url, payload):
-    """
-    Realiza una petición POST y gestiona la respuesta.
-    """
-    if not payload:
-        return None
-
+    if not payload: return None
     try:
         response = requests.post(url, json=payload)
-        response.raise_for_status()  # Lanza una excepción para errores de HTTP
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error al realizar la petición a la API en {url}: {e}")
+        print(f"Error en la llamada a la API '{url}': {e}")
         return None
 
-#
-# Función para guardar la respuesta de la API en un archivo JSON.
-#
 def guardar_respuesta(datos, nombre_archivo):
-    """
-    Guarda los datos JSON en un archivo local para su posterior análisis.
-    """
     try:
         with open(nombre_archivo, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
@@ -53,341 +148,156 @@ def guardar_respuesta(datos, nombre_archivo):
     except Exception as e:
         print(f"Error al guardar el archivo '{nombre_archivo}': {e}")
 
-#
-# Mapeos de equipos para las divisiones
-#
-MAPA_EQUIPOS_1A_DIV = {
-    1: "Galácticos de la noche FC", 2: "AL-CARRER F.C.", 3: "QUE BARBARIDAD FC",
-    4: "Fuentino Pérez", 5: "CALAMARES CON TORRIJAS🦑🍞", 6: "CD Congelados",
-    7: "THE LIONS", 8: "EL CHOLISMO FC", 9: "Real Fermín C.F.", 10: "Real 🥚🥚 Bailarines 🪩F.C",
-    11: "MORRITOS F.C.", 12: "Poli Ejido CF", 13: "Juaki la bomba", 14: "LA MARRANERA",
-    15: "Larios Limon FC", 16: "PANAKOTA F.F.", 17: "Real Pezqueñines FC",
-    18: "LOS POKÉMON 🐭🟡🐭", 19: "El Huracán CF", 20: "Cangrena F.C."
-}
-
-MAPA_EQUIPOS_2A_DIV = {
-    1: "SANTA LUCIA FC", 2: "Osasuna N.S.R", 3: "Tetitas Colesterol . F.C",
-    4: "Fuentino Pérez", 5: "Charo la  Picanta FC", 6: "Kostas Mariotas",
-    7: "Real Pescados el Puerto Fc", 8: "Team pepino", 9: "🇧🇷Samba Rovinha 🇧🇷",
-    10: "Banano Vallekano 🍌⚡", 11: "SICARIOS CF", 12: "Minabo De Kiev",
-    13: "Todo por la camiseta 🇪🇸", 14: "parker f.c.", 15: "Molinardo fc",
-    16: "Lazaroneta", 17: "ElBarto F.C", 18: "BANANEROS FC", 19: "Morenetes de la Giralda �",
-    20: "Jamon York F.C.", 21: "Elche pero Peor", 22: "Motobetis a primera!",
-    23: "MTB Drink Team", 24: "Patejas"
-}
-
-#
-# Función para actualizar la hoja de Excel con los datos de la clasificación.
-#
-def actualizar_excel(datos_general, datos_teams, nombre_archivo_excel, sheet_name, fila_inicio, columna_inicio):
-    """
-    Sobreescribe una hoja específica del archivo Excel con los datos de la API.
-    """
+def actualizar_excel_en_memoria(file_content, datos_general, datos_teams, sheet_name, fila_inicio, columna_inicio):
     try:
-        # Cargar el archivo de Excel
-        workbook = openpyxl.load_workbook(nombre_archivo_excel)
+        workbook = openpyxl.load_workbook(io.BytesIO(file_content))
         sheet = workbook[sheet_name]
-
-        print(f"Hoja '{sheet_name}' cargada con éxito.")
-
-        # Mapear los nombres de los equipos a sus puntos generales
-        puntos_generales = {equipo['teamname']: equipo['points'] for equipo in datos_teams['answer']['teams']}
-
-        # Obtener el ranking de la API, que ya viene ordenado
+        puntos_generales = {e['teamname']: e['points'] for e in datos_teams['answer']['teams']}
         ranking_general = datos_general['answer']['ranking']
 
-        # Limpiar las filas existentes antes de escribir los nuevos datos
-        # Esto es importante para sobreescribir el orden y los valores
-        for row in sheet.iter_rows(min_row=fila_inicio, max_row=sheet.max_row, min_col=columna_inicio, max_col=columna_inicio+3):
+        for row in sheet.iter_rows(min_row=fila_inicio, max_row=sheet.max_row, min_col=1, max_col=columna_inicio + 3):
             for cell in row:
                 cell.value = None
 
-        # Escribir los nuevos datos
         for i, equipo in enumerate(ranking_general):
             fila_actual = fila_inicio + i
-            nombre_equipo = equipo['name']
-
-            # Escribir la posición (solo si la columna de inicio es A)
-            if columna_inicio == 1:
+            if columna_inicio == 2: # Para 2a DIV
                 sheet.cell(row=fila_actual, column=1).value = f"{i+1}º"
-
-            # Escribir el nombre del equipo, puntos totales y puntos generales
-            sheet.cell(row=fila_actual, column=columna_inicio).value = nombre_equipo
+            sheet.cell(row=fila_actual, column=columna_inicio).value = equipo['name']
             sheet.cell(row=fila_actual, column=columna_inicio + 1).value = equipo['points']
-            sheet.cell(row=fila_actual, column=columna_inicio + 2).value = puntos_generales.get(nombre_equipo, 0)
+            sheet.cell(row=fila_actual, column=columna_inicio + 2).value = puntos_generales.get(equipo['name'], 0)
 
-        # Guardar el archivo
-        workbook.save(nombre_archivo_excel)
-        print(f"El archivo '{nombre_archivo_excel}' ha sido actualizado con éxito. ¡Se han sobreescrito los datos!")
-
-    except FileNotFoundError:
-        print(f"Error: El archivo de Excel '{nombre_archivo_excel}' no se encontró.")
-    except KeyError as e:
-        print(f"Error: No se encontró la hoja '{sheet_name}' o una clave en el JSON: {e}")
+        buffer = io.BytesIO()
+        workbook.save(buffer)
+        print(f"Hoja '{sheet_name}' actualizada en memoria.")
+        return buffer.getvalue()
     except Exception as e:
-        print(f"Ocurrió un error al procesar el archivo de Excel: {e}")
+        print(f"Error procesando el Excel en memoria: {e}")
+        return None
 
-#
-# Función que procesa los datos y actualiza una hoja específica del Excel.
-#
-def procesar_y_actualizar_division(payload_file, excel_file, sheet_name, start_row, start_col):
-    """
-    Coordina la carga del payload, las llamadas a la API y la actualización del Excel
-    para una división específica.
-    """
-    payload = cargar_payload(payload_file)
-    if not payload:
-        return
+def procesar_y_actualizar_division(access_token, payload_file, sheet_name, start_row, start_col):
+    try:
+        drive_id, item_id = get_drive_item_from_share_link(access_token, ONEDRIVE_SHARE_LINK)
+        excel_content = download_excel_from_onedrive(access_token, drive_id, item_id)
 
-    # URLs de la API
-    API_URL_GENERAL = "https://api.futmondo.com/1/ranking/general"
-    API_URL_TEAMS = "https://api.futmondo.com/2/championship/teams"
+        payload = cargar_payload(payload_file)
+        if not payload: return
 
-    # --- Llamada 1: Obtener la clasificación general ---
-    print(f"\n--- Llamando a la API de clasificación general para '{sheet_name}' ---")
-    payload_general = copy.deepcopy(payload)
-    if 'roundId' in payload_general['query']:
-        payload_general['query'].pop('roundId', None)
+        payload_general = copy.deepcopy(payload)
+        if 'roundId' in payload_general['query']: payload_general['query'].pop('roundId', None)
+        datos_general = llamar_api("https://api.futmondo.com/1/ranking/general", payload_general)
 
-    datos_general = llamar_api(API_URL_GENERAL, payload_general)
-    if datos_general:
-        guardar_respuesta(datos_general, f"respuesta_general_{sheet_name.replace(' ', '_')}.json")
+        payload_teams = copy.deepcopy(payload)
+        payload_teams['query'] = {"championshipId": payload["query"]["championshipId"]}
+        datos_teams = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams)
 
-    # --- Llamada 2: Obtener los equipos con el nuevo endpoint ---
-    print(f"\n--- Llamando a la API de equipos para '{sheet_name}' ---")
-    payload_teams = copy.deepcopy(payload)
-    payload_teams['query'] = {"championshipId": payload_teams["query"]["championshipId"]}
-    datos_teams = llamar_api(API_URL_TEAMS, payload_teams)
-    if datos_teams:
-        guardar_respuesta(datos_teams, f"respuesta_teams_{sheet_name.replace(' ', '_')}.json")
+        if datos_general and datos_teams:
+            updated_content = actualizar_excel_en_memoria(excel_content, datos_general, datos_teams, sheet_name, start_row, start_col)
+            if updated_content:
+                upload_excel_to_onedrive(access_token, drive_id, item_id, updated_content)
+        else:
+            print(f"No se obtuvieron los datos de Futmondo para '{sheet_name}'.")
 
-    # --- Paso final: Actualizar el archivo de Excel si todas las llamadas fueron exitosas ---
-    if datos_general and datos_teams:
-        print(f"\n--- Procesando y actualizando el archivo de Excel para '{sheet_name}' ---")
-        actualizar_excel(datos_general, datos_teams, excel_file, sheet_name, start_row, start_col)
-    else:
-        print(f"\nFallo al obtener los datos necesarios para '{sheet_name}'. No se pudo actualizar el Excel.")
+    except Exception as e:
+        print(f"Ha ocurrido un error durante el proceso de la división '{sheet_name}': {e}")
 
-#
-# Función que procesa y actualiza los resultados de una ronda específica para una división.
-#
 def procesar_ronda_completa(payload_file, output_file, round_number, division):
-    """
-    Coordina la carga del payload, la llamada a la API de ronda y el procesamiento de resultados.
-    """
     print(f"\n--- Procesando resultados de la ronda para la {division} división ---")
     API_URL_ROUND = "https://api.futmondo.com/1/ranking/round"
     API_URL_LINEUP = "https://api.futmondo.com/1/userteam/roundlineup"
-
     payload_base = cargar_payload(payload_file)
-    if not payload_base:
-        return
+    if not payload_base: return
 
-    # Obtener el mapa de equipos correcto para la división
-    mapa_equipos = MAPA_EQUIPOS_1A_DIV if division == "primera" else MAPA_EQUIPOS_2A_DIV
-
-    # 1. Obtener los emparejamientos de la ronda
     payload_round = copy.deepcopy(payload_base)
     payload_round['query']['roundNumber'] = round_number
-    if 'roundId' in payload_round['query']:
-        payload_round['query'].pop('roundId')
-
+    if 'roundId' in payload_round['query']: payload_round['query'].pop('roundId')
     datos_ronda = llamar_api(API_URL_ROUND, payload_round)
 
-    # NUEVA VERIFICACIÓN DE CLAVES
-    if not datos_ronda or 'answer' not in datos_ronda or 'ranking' not in datos_ronda['answer'] or 'matches' not in datos_ronda['answer']:
-        print("Error: La respuesta de la API no contiene las claves 'answer', 'ranking' o 'matches'. Saltando el procesamiento de esta ronda.")
+    if not datos_ronda or 'answer' not in datos_ronda or 'matches' not in datos_ronda['answer']:
+        print("Error: Respuesta de API de ronda inválida.")
         return
 
-    # Aquí está la corrección: usar 'ranking' en lugar de 'teams'
-    teams_in_round = datos_ronda['answer']['ranking']
+    teams_in_round = datos_ronda['answer'].get('ranking', [])
     matches = datos_ronda['answer']['matches']
+    team_map_id = {i + 1: team['_id'] for i, team in enumerate(teams_in_round)}
+    team_map_name = {i + 1: team['name'] for i, team in enumerate(teams_in_round)}
 
-    # Mapear el índice de equipo a su ID y nombre para un acceso más fácil
-    team_map_id = {i+1: team['_id'] for i, team in enumerate(teams_in_round)}
-    team_map_name = {i+1: team['name'] for i, team in enumerate(teams_in_round)}
+    resultados_finales, puntos_equipos_por_ronda, jugadores_ronda = [], [], []
 
-    resultados_finales = []
-
-    # Listas para almacenar los datos de los equipos para encontrar los 3 peores
-    puntos_equipos_por_ronda = []
-    jugadores_ronda = []
-
-    # 2. Procesar cada combate de la ronda
     for match in matches:
-        team_idx_1 = match['p'][0]
-        team_idx_2 = match['p'][1]
+        ids = [team_map_id.get(p) for p in match['p']]
+        nombres = [team_map_name.get(p) for p in match['p']]
+        puntos = match['data']['partial']
 
-        userteamId_1 = team_map_id.get(team_idx_1)
-        userteamId_2 = team_map_id.get(team_idx_2)
-        nombre_equipo_1 = team_map_name.get(team_idx_1)
-        nombre_equipo_2 = team_map_name.get(team_idx_2)
+        for i in range(2):
+            puntos_equipos_por_ronda.append({"equipo": nombres[i], "puntos": puntos[i]})
 
-        puntos_equipo_1 = match['data']['partial'][0]
-        puntos_equipo_2 = match['data']['partial'][1]
+        lineups, capitanes = [], []
+        for i in range(2):
+            payload_lineup = copy.deepcopy(payload_base)
+            payload_lineup['query'].update({'round': round_number, 'userteamId': ids[i]})
+            datos_lineup = llamar_api(API_URL_LINEUP, payload_lineup)
+            lineup_players = datos_lineup.get('answer', {}).get('players', [])
+            lineups.append(lineup_players)
 
-        # Almacenar puntos totales de los equipos para la lista de 3 peores
-        puntos_equipos_por_ronda.append({"equipo": nombre_equipo_1, "puntos": puntos_equipo_1})
-        puntos_equipos_por_ronda.append({"equipo": nombre_equipo_2, "puntos": puntos_equipo_2})
+            capitan = next((p['name'] for p in lineup_players if p.get('cpt')), "")
+            capitanes.append(capitan)
 
-        # 3. Obtener alineación del Equipo 1
-        payload_lineup_1 = copy.deepcopy(payload_base)
-        payload_lineup_1['query']['round'] = round_number
-        payload_lineup_1['query']['userteamId'] = userteamId_1
-        datos_lineup_1 = llamar_api(API_URL_LINEUP, payload_lineup_1)
+            for player in lineup_players:
+                jugadores_ronda.append({"nombre": player['name'], "puntos": player['points'], "equipo": nombres[i], "es_capitan": player.get('cpt')})
 
-        # 4. Obtener alineación del Equipo 2
-        payload_lineup_2 = copy.deepcopy(payload_base)
-        payload_lineup_2['query']['round'] = round_number
-        payload_lineup_2['query']['userteamId'] = userteamId_2
-        datos_lineup_2 = llamar_api(API_URL_LINEUP, payload_lineup_2)
+        jugadores_repetidos = [p['name'] for p in lineups[0] if p['name'] in {p2['name'] for p2 in lineups[1]}]
 
-        if not datos_lineup_1 or not datos_lineup_2 or 'players' not in datos_lineup_1['answer'] or 'players' not in datos_lineup_2['answer']:
-            print(f"Error al obtener las alineaciones para el combate {nombre_equipo_1} vs {nombre_equipo_2}. Saltando...")
-            continue
-
-        lineup_1_players_list = datos_lineup_1['answer']['players']
-        lineup_2_players_list = datos_lineup_2['answer']['players']
-
-        # Encontrar capitán del Equipo 1
-        capitan_1 = ""
-        for player in lineup_1_players_list:
-            if player.get('cpt'):
-                capitan_1 = player['name']
-                break
-
-        # Encontrar capitán del Equipo 2
-        capitan_2 = ""
-        for player in lineup_2_players_list:
-            if player.get('cpt'):
-                capitan_2 = player['name']
-                break
-
-        # Almacenar jugadores y capitanes para encontrar los peores
-        for player in lineup_1_players_list:
-            jugadores_ronda.append({"nombre": player['name'], "puntos": player['points'], "equipo": nombre_equipo_1, "es_capitan": player.get('cpt')})
-        for player in lineup_2_players_list:
-            jugadores_ronda.append({"nombre": player['name'], "puntos": player['points'], "equipo": nombre_equipo_2, "es_capitan": player.get('cpt')})
-
-        # Encontrar jugadores repetidos
-        jugadores_repetidos = [
-            player['name'] for player in lineup_1_players_list if player['name'] in [p['name'] for p in lineup_2_players_list]
-        ]
-
-        # Construir el objeto de resultados
-        resultado_combate = {
-            "Combate": f"{nombre_equipo_1} vs {nombre_equipo_2}",
-            f"{nombre_equipo_1}": {"Puntuacion": puntos_equipo_1, "Capitan": capitan_1},
-            f"{nombre_equipo_2}": {"Puntuacion": puntos_equipo_2, "Capitan": capitan_2},
+        resultados_finales.append({
+            "Combate": f"{nombres[0]} vs {nombres[1]}",
+            f"{nombres[0]}": {"Puntuacion": puntos[0], "Capitan": capitanes[0]},
+            f"{nombres[1]}": {"Puntuacion": puntos[1], "Capitan": capitanes[1]},
             "Jugadores repetidos": jugadores_repetidos
-        }
-        resultados_finales.append(resultado_combate)
-
-    # 5. Encontrar los 3 peores equipos por puntuación total en la ronda
-    peores_equipos = sorted(puntos_equipos_por_ronda, key=lambda x: x['puntos'])[:3]
-
-    # Formatear la lista de peores equipos
-    lista_peores_equipos = []
-    for i, equipo in enumerate(peores_equipos):
-        lista_peores_equipos.append({
-            "posicion": i + 1,
-            "equipo": equipo['equipo'],
-            "puntos": equipo['puntos']
         })
 
-    # Encontrar el/los peor(es) capitán(es) y unificarlos
-    peores_capitanes_map = defaultdict(list)
-    min_puntos_capitan = float('inf')
+    peores_equipos = sorted(puntos_equipos_por_ronda, key=lambda x: x['puntos'])[:3]
+    lista_peores_equipos = [{"posicion": i + 1, **equipo} for i, equipo in enumerate(peores_equipos)]
 
-    for jugador in jugadores_ronda:
-        if jugador['es_capitan']:
-            if jugador['puntos'] < min_puntos_capitan:
-                min_puntos_capitan = jugador['puntos']
-                peores_capitanes_map.clear()
-                peores_capitanes_map[jugador['nombre']].append(jugador['equipo'])
-            elif jugador['puntos'] == min_puntos_capitan:
-                if jugador['equipo'] not in peores_capitanes_map[jugador['nombre']]:
-                    peores_capitanes_map[jugador['nombre']].append(jugador['equipo'])
+    def encontrar_peores(jugadores, key_filter=None):
+        min_puntos = float('inf')
+        peores_map = defaultdict(list)
 
-    peores_capitanes_final = [
-        {"nombre": nombre, "puntos": min_puntos_capitan, "equipos": equipos}
-        for nombre, equipos in peores_capitanes_map.items()
-    ]
+        iterable = filter(key_filter, jugadores) if key_filter else jugadores
 
-    # Encontrar el/los peor(es) jugador(es) y unificarlos
-    peores_jugadores_map = defaultdict(list)
-    min_puntos_jugador = float('inf')
+        for jugador in iterable:
+            if jugador['puntos'] < min_puntos:
+                min_puntos = jugador['puntos']
+                peores_map.clear()
+            if jugador['puntos'] == min_puntos:
+                if jugador['equipo'] not in peores_map[jugador['nombre']]:
+                    peores_map[jugador['nombre']].append(jugador['equipo'])
+        return [{"nombre": n, "puntos": min_puntos, "equipos": e} for n, e in peores_map.items()]
 
-    for jugador in jugadores_ronda:
-        if jugador['puntos'] < min_puntos_jugador:
-            min_puntos_jugador = jugador['puntos']
-            peores_jugadores_map.clear()
-            peores_jugadores_map[jugador['nombre']].append(jugador['equipo'])
-        elif jugador['puntos'] == min_puntos_jugador:
-            if jugador['equipo'] not in peores_jugadores_map[jugador['nombre']]:
-                peores_jugadores_map[jugador['nombre']].append(jugador['equipo'])
+    peores_capitanes_final = encontrar_peores(jugadores_ronda, lambda j: j['es_capitan'])
+    peores_jugadores_final = encontrar_peores(jugadores_ronda)
 
-    peores_jugadores_final = [
-        {"nombre": nombre, "puntos": min_puntos_jugador, "equipos": equipos}
-        for nombre, equipos in peores_jugadores_map.items()
-    ]
-
-    # 6. Guardar la lista de resultados y el resumen
     resumen_final = {
         "Resultados por combate": resultados_finales,
         "Peor Capitan": peores_capitanes_final,
         "Peor Jugador": peores_jugadores_final,
         "Los 3 peores equipos de la ronda": lista_peores_equipos
     }
-
     guardar_respuesta(resumen_final, output_file)
-    print(f"\nResumen de resultados de la ronda guardado en '{output_file}'.")
 
-
-#
-# Función principal del script.
-#
 def main():
-    """
-    Función principal que coordina las llamadas a la API y la gestión de archivos para ambas divisiones.
-    """
-    # Configuración de la 1a División
-    PAYLOAD_PRIMERA = "payload_primera.json"
-    EXCEL_FILE = "SuperLiga Fuentmondo 25-26.xlsx"
-    SHEET_PRIMERA = "Clasificación 1a DIV"
-    ROW_START_PRIMERA = 5 # Fila de inicio: 5. Columna de inicio: A
-    COL_START_PRIMERA = 2 # A es la columna 1
+    access_token = get_access_token()
+    if not access_token:
+        print("No se pudo obtener el token de acceso. Finalizando el script.")
+        return
+
+    print("\n--- INICIANDO ACTUALIZACIÓN DE CLASIFICACIONES EN ONEDRIVE ---")
+    procesar_y_actualizar_division(access_token, "payload_primera.json", "Clasificación 1a DIV", 5, 2)
+    procesar_y_actualizar_division(access_token, "payload.json", "Clasificación 2a DIV", 2, 3)
+
+    print("\n--- INICIANDO ANÁLISIS DE RONDAS ---")
     ROUND_NUMBER = "6868e3437775a433449ea12b"
-
-    # Configuración de la 2a División
-    PAYLOAD_SEGUNDA = "payload.json"
-    SHEET_SEGUNDA = "Clasificación 2a DIV"
-    ROW_START_SEGUNDA = 2 # Fila de inicio: 2. Columna de inicio: B
-    COL_START_SEGUNDA = 3 # B es la columna 2
-
-    # Procesar la 1a División
-    procesar_y_actualizar_division(PAYLOAD_PRIMERA, EXCEL_FILE, SHEET_PRIMERA, ROW_START_PRIMERA, COL_START_PRIMERA)
-
-    # Procesar la 2a División
-    procesar_y_actualizar_division(PAYLOAD_SEGUNDA, EXCEL_FILE, SHEET_SEGUNDA, ROW_START_SEGUNDA, COL_START_SEGUNDA)
-
-    # --- Proceso de ronda para la 1a División ---
-    procesar_ronda_completa(
-        payload_file=PAYLOAD_PRIMERA,
-        output_file="resultados_ronda_1a_div.json",
-        round_number=ROUND_NUMBER,
-        division="primera"
-    )
-
-    # --- Proceso de ronda para la 2a División ---
-    procesar_ronda_completa(
-        payload_file=PAYLOAD_SEGUNDA,
-        output_file="resultados_ronda_2a_div.json",
-        round_number=ROUND_NUMBER, # NOTA: Usa el roundNumber correcto aquí para la 2a división
-        division="segunda"
-    )
-
+    procesar_ronda_completa("payload_primera.json", "resultados_ronda_1a_div.json", ROUND_NUMBER, "primera")
+    procesar_ronda_completa("payload.json", "resultados_ronda_2a_div.json", ROUND_NUMBER, "segunda")
 
 if __name__ == '__main__':
     main()
-
