@@ -1,0 +1,582 @@
+{
+    "Galácticos de la noche FC": {
+        "multa_total": 2.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": false,
+                "multa": 0.0
+            }
+        }
+    },
+    "AL-CARRER F.C.": {
+        "multa_total": 4.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 5,
+                "multa": 2.5
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "QUE BARBARIDAD FC": {
+        "multa_total": 4.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 5,
+                "multa": 2.5
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Fuentino Pérez": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "CALAMARES CON TORRIJAS🦑🍞": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "CD Congelados": {
+        "multa_total": 2.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 1,
+                "multa": 0.5
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "THE LIONS": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "EL CHOLISMO FC": {
+        "multa_total": 4.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 3,
+                "multa": 1.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Real Fermín C.F.": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Real 🥚🥚 Bailarines 🪩F.C": {
+        "multa_total": 2.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": false,
+                "multa": 0.0
+            }
+        }
+    },
+    "MORRITOS F.C.": {
+        "multa_total": 2.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 1,
+                "multa": 0.5
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Poli Ejido CF": {
+        "multa_total": 4.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Juaki la bomba": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "LA MARRANERA": {
+        "multa_total": 4.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 5,
+                "multa": 2.5
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": false,
+                "multa": 0.0
+            }
+        }
+    },
+    "Larios Limon FC": {
+        "multa_total": 5.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 5,
+                "multa": 2.5
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "PANAKOTA F.F.": {
+        "multa_total": 6.5,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 4,
+                "multa": 2.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 2,
+                "multa": 1.5
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Real Pezqueñines FC": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "LOS POKÉMON 🐭🟡🐭": {
+        "multa_total": 3.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "El Huracán CF": {
+        "multa_total": 6.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 2,
+                "multa": 1.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 1,
+                "multa": 2.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    },
+    "Lim Hijo de Puta": {
+        "multa_total": 5.0,
+        "desglose": {
+            "jugadores_repetidos": {
+                "cantidad": 4,
+                "multa": 2.0
+            },
+            "capitan_repetido_con_rival": {
+                "aplicado": false,
+                "multa": 0.0
+            },
+            "tenias_capitan_rival": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "peor_equipo_jornada": {
+                "posicion": 0,
+                "multa": 0.0
+            },
+            "alinear_peor_jugador": {
+                "aplicado": true,
+                "multa": 1.0
+            },
+            "elegir_peor_capitan": {
+                "aplicado": true,
+                "multa": 1.0
+            }
+        }
+    }
+}

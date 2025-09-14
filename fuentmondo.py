@@ -179,6 +179,8 @@ def llamar_api(url, payload):
 # Guarda los datos de respuesta de la API en un archivo JSON.
 def guardar_respuesta(datos, nombre_archivo):
     try:
+        # Crea el directorio si no existe
+        os.makedirs(os.path.dirname(nombre_archivo), exist_ok=True)
         with open(nombre_archivo, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
         print(f"Respuesta de la API guardada en '{nombre_archivo}'.")
@@ -234,7 +236,6 @@ def get_captains_for_round(payload_base, datos_ronda, name_map={}):
             team_captains.append({"team_name": canonical_name, "capitan": capitan})
     return team_captains
 
-# --- [NUEVA FUNCIÓN] ---
 # Procesa la respuesta de la API de rondas, manejando casos especiales como la jornada 1.5.
 def procesar_rondas_api(rounds_list):
     if not rounds_list:
@@ -248,15 +249,93 @@ def procesar_rondas_api(rounds_list):
         if not round_num or not round_id:
             continue
 
-        # Regla especial: la jornada 1.5 se trata como la jornada 6
         if round_num == 1.5:
             rounds_map[6] = round_id
             print("Jornada especial 1.5 mapeada como Jornada 6.")
-        # Solo procesar números enteros para el resto
         elif round_num % 1 == 0:
             rounds_map[int(round_num)] = round_id
 
     return rounds_map
+
+# Calcula las multas de una jornada con un desglose detallado.
+def calcular_multas_jornada(
+    teams_in_round,
+    matches,
+    team_map_name,
+    dict_alineaciones,
+    dict_capitanes,
+    lista_peores_equipos,
+    peores_jugadores_final,
+    peores_capitanes_final
+):
+    multas_finales = {}
+
+    for team_name in teams_in_round:
+        multas_finales[team_name] = {
+            "multa_total": 0.0,
+            "desglose": {
+                "jugadores_repetidos": {"cantidad": 0, "multa": 0.0},
+                "capitan_repetido_con_rival": {"aplicado": False, "multa": 0.0},
+                "tenias_capitan_rival": {"aplicado": False, "multa": 0.0},
+                "peor_equipo_jornada": {"posicion": 0, "multa": 0.0},
+                "alinear_peor_jugador": {"aplicado": False, "multa": 0.0},
+                "elegir_peor_capitan": {"aplicado": False, "multa": 0.0}
+            }
+        }
+
+    for match in matches:
+        team_indices = match['p']
+        team_a_name = team_map_name.get(team_indices[0])
+        team_b_name = team_map_name.get(team_indices[1])
+
+        if not team_a_name or not team_b_name:
+            continue
+
+        lineup_a = dict_alineaciones.get(team_a_name, [])
+        lineup_b = dict_alineaciones.get(team_b_name, [])
+        nombres_a = {p['name'] for p in lineup_a}
+        nombres_b = {p['name'] for p in lineup_b}
+        capitan_a = dict_capitanes.get(team_a_name, "N/A")
+        capitan_b = dict_capitanes.get(team_b_name, "N/A")
+
+        repetidos = nombres_a.intersection(nombres_b)
+        if repetidos:
+            multa_repetidos = len(repetidos) * 0.5
+            multas_finales[team_a_name]["desglose"]["jugadores_repetidos"] = {"cantidad": len(repetidos), "multa": multa_repetidos}
+            multas_finales[team_b_name]["desglose"]["jugadores_repetidos"] = {"cantidad": len(repetidos), "multa": multa_repetidos}
+
+        if capitan_a == capitan_b and capitan_a != "N/A":
+            multas_finales[team_a_name]["desglose"]["capitan_repetido_con_rival"] = {"aplicado": True, "multa": 1.0}
+            multas_finales[team_b_name]["desglose"]["capitan_repetido_con_rival"] = {"aplicado": True, "multa": 1.0}
+
+        if capitan_a in nombres_b and capitan_a != capitan_b:
+            multas_finales[team_b_name]["desglose"]["tenias_capitan_rival"] = {"aplicado": True, "multa": 1.0}
+        if capitan_b in nombres_a and capitan_a != capitan_b:
+            multas_finales[team_a_name]["desglose"]["tenias_capitan_rival"] = {"aplicado": True, "multa": 1.0}
+
+    multas_peores = {1: 2.0, 2: 1.5, 3: 1.0}
+    for item in lista_peores_equipos:
+        pos = item['posicion']
+        team_name = item['equipo']
+        if team_name in multas_finales and pos in multas_peores:
+            multas_finales[team_name]["desglose"]["peor_equipo_jornada"] = {"posicion": pos, "multa": multas_peores[pos]}
+
+    nombres_peores_jugadores = {p['nombre'] for p in peores_jugadores_final}
+    for team_name, alineacion in dict_alineaciones.items():
+        nombres_jugadores = {p['name'] for p in alineacion}
+        if not nombres_peores_jugadores.isdisjoint(nombres_jugadores):
+             multas_finales[team_name]["desglose"]["alinear_peor_jugador"] = {"aplicado": True, "multa": 1.0}
+
+    nombres_peores_capitanes = {p['nombre'] for p in peores_capitanes_final}
+    for team_name, capitan in dict_capitanes.items():
+        if capitan in nombres_peores_capitanes:
+            multas_finales[team_name]["desglose"]["elegir_peor_capitan"] = {"aplicado": True, "multa": 1.0}
+
+    for team_name, data in multas_finales.items():
+        total = sum(d.get('multa', 0.0) for d in data['desglose'].values())
+        multas_finales[team_name]['multa_total'] = round(total, 2)
+
+    return multas_finales
 
 # --- Funciones de Actualización de Excel ---
 
@@ -361,59 +440,66 @@ def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_
 
 # Procesa y genera un informe JSON completo para una ronda específica.
 def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={}):
-    print(f"\n--- Procesando resultados de la ronda para la {datos_ronda.get('division', 'división desconocida')} ---")
-    API_URL_LINEUP = "https://api.futmondo.com/1/userteam/roundlineup"
     if not datos_ronda or 'answer' not in datos_ronda or 'matches' not in datos_ronda['answer']:
         print("Error: Respuesta de API de ronda inválida.")
-        return
+        return None, None # Devuelve None si falla
+
     teams_in_round_list = datos_ronda['answer'].get('ranking', [])
     matches = datos_ronda['answer']['matches']
     round_id_actual = datos_ronda['query']['roundId']
     team_map_id = {i + 1: team['_id'] for i, team in enumerate(teams_in_round_list)}
     team_map_name = {i + 1: name_map.get(team['name'], team['name']) for i, team in enumerate(teams_in_round_list)}
+
     resultados_finales, puntos_equipos_por_ronda, jugadores_ronda = [], [], []
+    dict_alineaciones, dict_capitanes = {}, {}
+
     for match in matches:
         ids = [team_map_id.get(p) for p in match['p']]
         nombres = [team_map_name.get(p) for p in match['p']]
-        if 'data' in match and 'partial' in match['data']:
-            puntos = match['data']['partial']
-        elif 'm' in match:
-            puntos = match['m']
-        else:
-            puntos = [0, 0]
+
+        puntos = match.get('data', {}).get('partial', match.get('m', [0, 0]))
+
         for i in range(2):
-            puntos_equipos_por_ronda.append({"equipo": nombres[i], "puntos": puntos[i]})
+            if nombres[i]:
+                puntos_equipos_por_ronda.append({"equipo": nombres[i], "puntos": puntos[i]})
+
         lineups, capitanes = [], []
         for i in range(2):
+            if not ids[i]: continue
             payload_lineup = {
                 "header": copy.deepcopy(payload_base["header"]),
-                "query": {
-                    "championshipId": payload_base["query"]["championshipId"],
-                    "round": round_id_actual,
-                    "userteamId": ids[i]
-                }
+                "query": {"championshipId": payload_base["query"]["championshipId"], "round": round_id_actual, "userteamId": ids[i]}
             }
-            datos_lineup = llamar_api(API_URL_LINEUP, payload_lineup)
+            datos_lineup = llamar_api("https://api.futmondo.com/1/userteam/roundlineup", payload_lineup)
             lineup_players = datos_lineup.get('answer', {}).get('players', [])
             lineups.append(lineup_players)
+
             capitan = next((p['name'] for p in lineup_players if p.get('cpt')), "N/A")
             capitanes.append(capitan)
+
+            if nombres[i]:
+                dict_alineaciones[nombres[i]] = lineup_players
+                dict_capitanes[nombres[i]] = capitan
+
             for player in lineup_players:
                 jugadores_ronda.append({
-                    "nombre": player['name'],
-                    "puntos": player['points'],
-                    "equipo": nombres[i],
-                    "es_capitan": player.get('cpt', False) # Asegurarse de que el valor sea booleano
+                    "nombre": player['name'], "puntos": player['points'],
+                    "equipo": nombres[i], "es_capitan": player.get('cpt', False)
                 })
+
         jugadores_repetidos = [p['name'] for p in lineups[0] if p['name'] in {p2['name'] for p2 in lineups[1]}]
-        resultados_finales.append({
-            "Combate": f"{nombres[0]} vs {nombres[1]}",
-            f"{nombres[0]}": {"Puntuacion": puntos[0], "Capitan": capitanes[0]},
-            f"{nombres[1]}": {"Puntuacion": puntos[1], "Capitan": capitanes[1]},
-            "Jugadores repetidos": jugadores_repetidos
-        })
+
+        if nombres[0] and nombres[1]:
+            resultados_finales.append({
+                "Combate": f"{nombres[0]} vs {nombres[1]}",
+                f"{nombres[0]}": {"Puntuacion": puntos[0], "Capitan": capitanes[0]},
+                f"{nombres[1]}": {"Puntuacion": puntos[1], "Capitan": capitanes[1]},
+                "Jugadores repetidos": jugadores_repetidos
+            })
+
     peores_equipos = sorted(puntos_equipos_por_ronda, key=lambda x: x['puntos'])[:3]
     lista_peores_equipos = [{"posicion": i + 1, **equipo} for i, equipo in enumerate(peores_equipos)]
+
     def encontrar_peores(jugadores, key_filter=None):
         min_puntos = float('inf')
         peores_map = defaultdict(list)
@@ -424,11 +510,13 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
                 min_puntos = puntos_jugador
                 peores_map.clear()
             if puntos_jugador == min_puntos:
-                if jugador['equipo'] not in peores_map[jugador['nombre']]:
+                if jugador['equipo'] and jugador['equipo'] not in peores_map[jugador['nombre']]:
                     peores_map[jugador['nombre']].append(jugador['equipo'])
         return [{"nombre": n, "puntos": min_puntos, "equipos": e} for n, e in peores_map.items()]
+
     peores_capitanes_final = encontrar_peores(jugadores_ronda, lambda j: j.get('es_capitan'))
     peores_jugadores_final = encontrar_peores(jugadores_ronda)
+
     resumen_final = {
         "Resultados por combate": resultados_finales,
         "Peor Capitan": peores_capitanes_final,
@@ -436,6 +524,50 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
         "Los 3 peores equipos de la ronda": lista_peores_equipos
     }
     guardar_respuesta(resumen_final, output_file)
+
+    multas_jornada = calcular_multas_jornada(
+        teams_in_round=list(team_map_name.values()), matches=matches, team_map_name=team_map_name,
+        dict_alineaciones=dict_alineaciones, dict_capitanes=dict_capitanes,
+        lista_peores_equipos=lista_peores_equipos, peores_jugadores_final=peores_jugadores_final,
+        peores_capitanes_final=peores_capitanes_final
+    )
+
+    return multas_jornada
+
+# --- [NUEVA FUNCIÓN] ---
+# Itera sobre todas las jornadas para procesar resultados y multas.
+def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str):
+    print(f"\n--- INICIANDO ANÁLISIS HISTÓRICO PARA {division_str.upper()} ---")
+    multas_acumuladas = defaultdict(float)
+
+    sorted_rounds = sorted(rounds_map.keys())
+    for round_number in sorted_rounds:
+        round_id = rounds_map[round_number]
+        print(f"\nProcesando Jornada {round_number}...")
+
+        payload_round = copy.deepcopy(payload_base)
+        payload_round['query'].update({'roundNumber': round_id})
+        datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
+
+        if datos_ronda and 'answer' in datos_ronda:
+            datos_ronda['query']['roundId'] = round_id # Aseguramos que el ID está presente
+
+            output_file = f"resultados/jornada_{round_number}_{division_str}.json"
+            multas_de_la_jornada = procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map)
+
+            if multas_de_la_jornada:
+                multas_output_file = f"multas/{division_str}/multas_jornada_{round_number}.json"
+                guardar_respuesta(multas_de_la_jornada, multas_output_file)
+                # Acumular multas
+                for team, data in multas_de_la_jornada.items():
+                    multas_acumuladas[team] += data.get('multa_total', 0.0)
+        else:
+            print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+
+    # Guardar el total de multas
+    multas_totales_file = f"multas/multas_totales_{division_str}.json"
+    guardar_respuesta(dict(multas_acumuladas), multas_totales_file)
+
 
 # --- Función Principal ---
 def main():
@@ -470,7 +602,6 @@ def main():
     payload_2a = cargar_payload("payload.json")
     if not payload_2a: return
 
-    # Obtenemos primero la lista de todas las jornadas disponibles
     rounds_data_1a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_1a))
     rounds_data_2a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_2a))
 
@@ -481,7 +612,6 @@ def main():
         print("Error: No se pudo obtener y procesar la lista de rondas de la API. Finalizando.")
         return
 
-    # Obtenemos los datos de la última jornada para cada división
     latest_round_id_1a = rounds_map_1a[max(rounds_map_1a.keys())]
     payload_round_1a = copy.deepcopy(payload_1a)
     payload_round_1a['query'].update({'roundNumber': latest_round_id_1a})
@@ -492,9 +622,6 @@ def main():
     payload_round_2a['query'].update({'roundNumber': latest_round_id_2a})
     datos_ronda_2a = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round_2a)
 
-    # --- [CORRECCIÓN] ---
-    # Creamos el mapa de nombres usando la lista de equipos de 'datos_ronda'
-    # que tiene el orden correcto y fijo, en lugar de 'datos_general'.
     map_1a, map_2a = {}, {}
     if datos_ronda_1a and 'answer' in datos_ronda_1a and 'ranking' in datos_ronda_1a['answer']:
         round_ranking_1a = datos_ronda_1a['answer']['ranking']
@@ -512,7 +639,6 @@ def main():
         else:
             print(f"ADVERTENCIA: No se pudo crear el mapeo para 2a División. La API de ronda devolvió {len(round_ranking_2a)} equipos y se proporcionaron {len(TEAMS_2A)}.")
 
-    # Obtenemos los datos restantes que sí dependen de la clasificación general
     datos_general_1a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_1a))
     datos_general_2a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_2a))
 
@@ -561,14 +687,10 @@ def main():
     except Exception as e:
         print(f"\nError al guardar el archivo Excel: {e}")
 
-    print("\n--- INICIANDO ANÁLISIS DE LA ÚLTIMA RONDA PARA INFORMES JSON ---")
-    datos_ronda_1a['division'] = 'primera'
-    datos_ronda_1a['query']['roundId'] = latest_round_id_1a
-    datos_ronda_2a['division'] = 'segunda'
-    datos_ronda_2a['query']['roundId'] = latest_round_id_2a
-
-    procesar_ronda_completa(datos_ronda_1a, "resultados_ronda_1a_div.json", payload_1a, map_1a)
-    procesar_ronda_completa(datos_ronda_2a, "resultados_ronda_2a_div.json", payload_2a, map_2a)
+    # --- [MODIFICACIÓN] ---
+    # Procesar todas las jornadas para ambas divisiones
+    procesar_historico_jornadas(rounds_map_1a, payload_1a, map_1a, "primera")
+    procesar_historico_jornadas(rounds_map_2a, payload_2a, map_2a, "segunda")
 
     team_id_motobetis = "66b9c5d20edfaa6140f45f75"
     if rounds_map_2a:
