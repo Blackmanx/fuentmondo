@@ -25,12 +25,12 @@ ONEDRIVE_SHARE_LINK = "https://1drv.ms/x/s!AidvQapyuNp6jBKR5uMUCaBYdLl0?e=3kXyKW
 
 # --- Funciones de Interfaz Gráfica (Tkinter) ---
 
-# Crea una ventana con botones para que el usuario elija la ubicación de guardado.
+# Crea una ventana para que el usuario elija el modo de ejecución.
 def choose_save_option():
     root = tk.Tk()
-    root.title("Opción de Guardado")
+    root.title("Modo de Ejecución")
     choice = [None]
-    window_width = 400
+    window_width = 550
     window_height = 150
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
@@ -43,13 +43,20 @@ def choose_save_option():
         choice[0] = option
         root.destroy()
 
-    tk.Label(root, text="¿Dónde quieres guardar el Excel modificado?", pady=15, font=("Helvetica", 12)).pack()
+    tk.Label(root, text="Elige qué quieres hacer:", pady=15, font=("Helvetica", 12)).pack()
     button_frame = tk.Frame(root)
     button_frame.pack(pady=10)
-    btn_onedrive = tk.Button(button_frame, text="Guardar en OneDrive", command=lambda: select_option('onedrive'), height=2, width=20, bg="#0078D4", fg="white")
-    btn_onedrive.pack(side=tk.LEFT, padx=10)
-    btn_local = tk.Button(button_frame, text="Guardar Localmente", command=lambda: select_option('local'), height=2, width=20)
-    btn_local.pack(side=tk.RIGHT, padx=10)
+
+    btn_onedrive = tk.Button(button_frame, text="Actualizar Excel en OneDrive", command=lambda: select_option('onedrive'), height=2, width=25, bg="#0078D4", fg="white")
+    btn_onedrive.pack(side=tk.LEFT, padx=5)
+
+    btn_local = tk.Button(button_frame, text="Actualizar Excel Localmente", command=lambda: select_option('local'), height=2, width=25)
+    btn_local.pack(side=tk.LEFT, padx=5)
+
+    # --- [NUEVO BOTÓN] ---
+    btn_multas = tk.Button(button_frame, text="Generar Solo Multas (HTML)", command=lambda: select_option('multas_only'), height=2, width=25, bg="#28a745", fg="white")
+    btn_multas.pack(side=tk.LEFT, padx=5)
+
     root.mainloop()
     return choice[0]
 
@@ -179,7 +186,6 @@ def llamar_api(url, payload):
 # Guarda los datos de respuesta de la API en un archivo JSON.
 def guardar_respuesta(datos, nombre_archivo):
     try:
-        # Crea el directorio si no existe
         os.makedirs(os.path.dirname(nombre_archivo), exist_ok=True)
         with open(nombre_archivo, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
@@ -240,36 +246,25 @@ def get_captains_for_round(payload_base, datos_ronda, name_map={}):
 def procesar_rondas_api(rounds_list):
     if not rounds_list:
         return {}
-
     rounds_map = {}
     for r in rounds_list:
         round_num = r.get('number')
         round_id = r.get('id')
-
         if not round_num or not round_id:
             continue
-
         if round_num == 1.5:
             rounds_map[6] = round_id
             print("Jornada especial 1.5 mapeada como Jornada 6.")
         elif round_num % 1 == 0:
             rounds_map[int(round_num)] = round_id
-
     return rounds_map
 
 # Calcula las multas de una jornada con un desglose detallado.
 def calcular_multas_jornada(
-    teams_in_round,
-    matches,
-    team_map_name,
-    dict_alineaciones,
-    dict_capitanes,
-    lista_peores_equipos,
-    peores_jugadores_final,
-    peores_capitanes_final
+    teams_in_round, matches, team_map_name, dict_alineaciones, dict_capitanes,
+    lista_peores_equipos, peores_jugadores_final, peores_capitanes_final
 ):
     multas_finales = {}
-
     for team_name in teams_in_round:
         multas_finales[team_name] = {
             "multa_total": 0.0,
@@ -282,238 +277,287 @@ def calcular_multas_jornada(
                 "elegir_peor_capitan": {"aplicado": False, "multa": 0.0}
             }
         }
-
     for match in matches:
         team_indices = match['p']
         team_a_name = team_map_name.get(team_indices[0])
         team_b_name = team_map_name.get(team_indices[1])
-
         if not team_a_name or not team_b_name:
             continue
-
         lineup_a = dict_alineaciones.get(team_a_name, [])
         lineup_b = dict_alineaciones.get(team_b_name, [])
         nombres_a = {p['name'] for p in lineup_a}
         nombres_b = {p['name'] for p in lineup_b}
         capitan_a = dict_capitanes.get(team_a_name, "N/A")
         capitan_b = dict_capitanes.get(team_b_name, "N/A")
-
         repetidos = nombres_a.intersection(nombres_b)
         if repetidos:
             multa_repetidos = len(repetidos) * 0.5
             multas_finales[team_a_name]["desglose"]["jugadores_repetidos"] = {"cantidad": len(repetidos), "multa": multa_repetidos}
             multas_finales[team_b_name]["desglose"]["jugadores_repetidos"] = {"cantidad": len(repetidos), "multa": multa_repetidos}
-
         if capitan_a == capitan_b and capitan_a != "N/A":
             multas_finales[team_a_name]["desglose"]["capitan_repetido_con_rival"] = {"aplicado": True, "multa": 1.0}
             multas_finales[team_b_name]["desglose"]["capitan_repetido_con_rival"] = {"aplicado": True, "multa": 1.0}
-
         if capitan_a in nombres_b and capitan_a != capitan_b:
             multas_finales[team_b_name]["desglose"]["tenias_capitan_rival"] = {"aplicado": True, "multa": 1.0}
         if capitan_b in nombres_a and capitan_a != capitan_b:
             multas_finales[team_a_name]["desglose"]["tenias_capitan_rival"] = {"aplicado": True, "multa": 1.0}
-
     multas_peores = {1: 2.0, 2: 1.5, 3: 1.0}
     for item in lista_peores_equipos:
         pos = item['posicion']
         team_name = item['equipo']
         if team_name in multas_finales and pos in multas_peores:
             multas_finales[team_name]["desglose"]["peor_equipo_jornada"] = {"posicion": pos, "multa": multas_peores[pos]}
-
     nombres_peores_jugadores = {p['nombre'] for p in peores_jugadores_final}
     for team_name, alineacion in dict_alineaciones.items():
         nombres_jugadores = {p['name'] for p in alineacion}
         if not nombres_peores_jugadores.isdisjoint(nombres_jugadores):
-                multas_finales[team_name]["desglose"]["alinear_peor_jugador"] = {"aplicado": True, "multa": 1.0}
-
+            multas_finales[team_name]["desglose"]["alinear_peor_jugador"] = {"aplicado": True, "multa": 1.0}
     nombres_peores_capitanes = {p['nombre'] for p in peores_capitanes_final}
     for team_name, capitan in dict_capitanes.items():
         if capitan in nombres_peores_capitanes:
             multas_finales[team_name]["desglose"]["elegir_peor_capitan"] = {"aplicado": True, "multa": 1.0}
-
     for team_name, data in multas_finales.items():
         total = sum(d.get('multa', 0.0) for d in data['desglose'].values())
         multas_finales[team_name]['multa_total'] = round(total, 2)
-
     return multas_finales
 
-# --- [NUEVA FUNCIÓN] ---
-# Genera un archivo HTML con la tabla de multas de una jornada.
-def generar_html_multas_jornada(multas_data, jornada_numero, division_str, output_path):
-    # Formatear el nombre de la división para el título
-    division_titulo = "1ª División" if division_str == "primera" else "2ª División"
-
-    # Ordenar equipos por la multa total de mayor a menor
+# Genera el contenido HTML para una única tabla de multas de jornada.
+def _generar_tabla_multas_jornada_html(multas_data):
     sorted_teams = sorted(multas_data.items(), key=lambda item: item[1]['multa_total'], reverse=True)
-
-    # Construir las filas de la tabla
     table_rows = ""
     for team_name, data in sorted_teams:
         multa_total = data.get('multa_total', 0.0)
-        if multa_total == 0: continue # Opcional: Omitir equipos sin multas
-
+        if multa_total == 0: continue
         desglose = data.get('desglose', {})
         desglose_html = "<ul>"
-
-        # Jugadores Repetidos
         jr = desglose.get("jugadores_repetidos", {})
         if jr.get("multa", 0) > 0:
             desglose_html += f"<li>Jugadores repetidos ({jr.get('cantidad', 0)}): {jr.get('multa', 0):.2f}€</li>"
-
-        # Capitán repetido con rival
         cr = desglose.get("capitan_repetido_con_rival", {})
         if cr.get("multa", 0) > 0:
             desglose_html += f"<li>Capitán repetido con rival: {cr.get('multa', 0):.2f}€</li>"
-
-        # Tenías capitán rival
         tcr = desglose.get("tenias_capitan_rival", {})
         if tcr.get("multa", 0) > 0:
             desglose_html += f"<li>Alinear al capitán del rival: {tcr.get('multa', 0):.2f}€</li>"
-
-        # Peor equipo jornada
         pe = desglose.get("peor_equipo_jornada", {})
         if pe.get("multa", 0) > 0:
             pos_map = {1: "Peor", 2: "2º Peor", 3: "3er Peor"}
             pos_str = pos_map.get(pe.get("posicion"), f"{pe.get('posicion')}º Peor")
             desglose_html += f"<li>{pos_str} equipo de la jornada: {pe.get('multa', 0):.2f}€</li>"
-
-        # Alinear peor jugador
         apj = desglose.get("alinear_peor_jugador", {})
         if apj.get("multa", 0) > 0:
-            desglose_html += f"<li>Alinear al peor jugador de la jornada: {apj.get('multa', 0):.2f}€</li>"
-
-        # Elegir peor capitán
+            desglose_html += f"<li>Alinear al peor jugador: {apj.get('multa', 0):.2f}€</li>"
         epc = desglose.get("elegir_peor_capitan", {})
         if epc.get("multa", 0) > 0:
-            desglose_html += f"<li>Elegir al peor capitán de la jornada: {epc.get('multa', 0):.2f}€</li>"
-
+            desglose_html += f"<li>Elegir al peor capitán: {epc.get('multa', 0):.2f}€</li>"
         desglose_html += "</ul>"
-
         table_rows += f"""
         <tr>
             <td>{team_name}</td>
             <td class="total-multa">{multa_total:.2f}€</td>
             <td class="desglose">{desglose_html}</td>
-        </tr>
-        """
+        </tr>"""
+    if not table_rows:
+        table_rows = '<tr><td colspan="3" style="text-align:center;">No se registraron multas en esta jornada.</td></tr>'
+    return f"""
+    <table>
+        <thead>
+            <tr>
+                <th>Equipo</th>
+                <th>Multa Total</th>
+                <th>Desglose</th>
+            </tr>
+        </thead>
+        <tbody>{table_rows}</tbody>
+    </table>"""
 
-    # Plantilla HTML
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Multas Jornada {jornada_numero} - {division_titulo}</title>
-        <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }}
-            .container {{ max-width: 900px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 8px; }}
-            h1 {{ text-align: center; color: #2c3e50; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ padding: 12px 15px; border: 1px solid #ddd; text-align: left; }}
-            th {{ background-color: #3498db; color: white; text-align: center; }}
-            tr:nth-child(even) {{ background-color: #f2f2f2; }}
-            tr:hover {{ background-color: #e8f4f8; }}
-            .total-multa {{ font-weight: bold; text-align: center; color: #c0392b; }}
-            .desglose ul {{ margin: 0; padding-left: 20px; }}
-            .desglose li {{ margin-bottom: 5px; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Multas Jornada {jornada_numero} - {division_titulo}</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 30%;">Equipo</th>
-                        <th style="width: 15%;">Multa Total</th>
-                        <th style="width: 55%;">Desglose</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows}
-                </tbody>
-            </table>
-        </div>
-    </body>
-    </html>
-    """
-
-    try:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        print(f"Informe HTML de multas de la jornada guardado en '{output_path}'.")
-    except Exception as e:
-        print(f"Error al guardar el archivo HTML '{output_path}': {e}")
-
-# --- [NUEVA FUNCIÓN] ---
-# Genera un archivo HTML con la tabla de multas totales acumuladas.
-def generar_html_multas_totales(multas_acumuladas, division_str, output_path):
-    division_titulo = "1ª División" if division_str == "primera" else "2ª División"
-
-    # Ordenar equipos por multa total de mayor a menor
+# Genera el contenido HTML para la tabla de multas totales.
+def _generar_tabla_multas_totales_html(multas_acumuladas):
     sorted_teams = sorted(multas_acumuladas.items(), key=lambda item: item[1], reverse=True)
-
     table_rows = ""
     for team_name, total_multa in sorted_teams:
         table_rows += f"""
         <tr>
             <td>{team_name}</td>
             <td class="total-multa">{total_multa:.2f}€</td>
-        </tr>
-        """
+        </tr>"""
+    return f"""
+    <table>
+        <thead>
+            <tr>
+                <th>Equipo</th>
+                <th>Total Acumulado</th>
+            </tr>
+        </thead>
+        <tbody>{table_rows}</tbody>
+    </table>"""
 
-    html_content = f"""
+# Genera la página HTML completa con todos los datos y la navegación.
+def generar_pagina_html_completa(datos_informe, output_path):
+    contenido_html = ""
+    nav_links_html = ""
+
+    for div_key, div_data in datos_informe.items():
+        div_titulo = "1ª División" if div_key == "primera" else "2ª División"
+        id_totales = f"{div_key}-totales"
+        contenido_html += f"""
+        <div id="{id_totales}" class="content-section">
+            <h2>Multas Totales - {div_titulo}</h2>
+            {_generar_tabla_multas_totales_html(div_data['totales'])}
+        </div>"""
+        nav_links_html += f'<a href="#" class="nav-link" data-target="{id_totales}">Totales {div_titulo}</a>'
+
+        nav_links_html += '<div class="dropdown">'
+        nav_links_html += f'<button class="dropbtn">Jornadas {div_titulo} &#9662;</button>'
+        nav_links_html += '<div class="dropdown-content">'
+        for jornada_data in sorted(div_data['jornadas'], key=lambda x: x['numero']):
+            jornada_num = jornada_data['numero']
+            id_jornada = f"{div_key}-jornada-{jornada_num}"
+            contenido_html += f"""
+            <div id="{id_jornada}" class="content-section" style="display:none;">
+                <h2>Multas Jornada {jornada_num} - {div_titulo}</h2>
+                {_generar_tabla_multas_jornada_html(jornada_data['multas'])}
+            </div>"""
+            nav_links_html += f'<a href="#" data-target="{id_jornada}">Jornada {jornada_num}</a>'
+        nav_links_html += '</div></div>'
+
+
+    html_completo = f"""
     <!DOCTYPE html>
     <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Multas Totales - {division_titulo}</title>
+        <title>Informe de Multas - SuperLiga Fuentmondo</title>
         <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }}
-            .container {{ max-width: 600px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 8px; }}
-            h1 {{ text-align: center; color: #2c3e50; }}
+            :root {{
+                --primary-bg: #2c3e50; --secondary-bg: #34495e; --accent-color: #3498db;
+                --text-light: #ecf0f1; --text-dark: #333; --border-color: #ddd;
+                --body-bg: #f4f7f6; --white: #fff; --shadow: rgba(0,0,0,0.1);
+            }}
+            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: var(--body-bg); color: var(--text-dark); }}
+            .container {{ max-width: 1100px; margin: 20px auto; padding: 20px; background: var(--white); box-shadow: 0 0 15px var(--shadow); border-radius: 8px; }}
+            .header {{ display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background-color: var(--primary-bg); color: var(--text-light); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 1001; }}
+            .header h1 {{ margin: 0; font-size: 1.5em; }}
+            .hamburger {{ display: none; font-size: 24px; background: none; border: none; color: var(--text-light); cursor: pointer; }}
+            .navbar {{ display: flex; align-items: center; }}
+            .navbar a, .dropbtn {{ display: inline-block; color: var(--text-light); text-align: center; padding: 14px 16px; text-decoration: none; font-size: 16px; border: none; background: none; cursor: pointer; outline: none; }}
+            .navbar a:hover, .dropdown:hover .dropbtn {{ background-color: var(--secondary-bg); }}
+            .navbar a.active {{ background-color: var(--accent-color); font-weight: bold; }}
+            .dropdown {{ position: relative; display: inline-block; }}
+            .dropdown-content {{ display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0 8px 16px var(--shadow); z-index: 1; border-radius: 4px; overflow: hidden; }}
+            .dropdown-content a {{ color: var(--text-dark); padding: 12px 16px; display: block; text-align: left; }}
+            .dropdown-content a:hover {{ background-color: #f1f1f1; }}
+            .dropdown-content.show {{ display: block; }}
+            .overlay {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }}
+            main {{ padding-top: 80px; }}
+            h2 {{ text-align: center; color: var(--primary-bg); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-top: 0; }}
             table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ padding: 12px 15px; border: 1px solid #ddd; text-align: left; }}
-            th {{ background-color: #c0392b; color: white; text-align: center; }}
+            th, td {{ padding: 12px 15px; border: 1px solid var(--border-color); text-align: left; }}
+            th {{ background-color: var(--accent-color); color: var(--white); }}
             tr:nth-child(even) {{ background-color: #f2f2f2; }}
-            tr:hover {{ background-color: #f5e8e8; }}
-            .total-multa {{ font-weight: bold; text-align: right; }}
+            .total-multa {{ font-weight: bold; text-align: center; color: #c0392b; }}
+            .desglose ul {{ margin: 0; padding-left: 20px; }}
+            .desglose li {{ margin-bottom: 5px; }}
+            @media screen and (max-width: 850px) {{
+                .header h1 {{ font-size: 1.2em; }}
+                .hamburger {{ display: block; }}
+                .navbar {{ position: fixed; top: 0; left: 0; height: 100%; width: 280px; background-color: var(--primary-bg); flex-direction: column; align-items: flex-start; padding-top: 60px; transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 1000; }}
+                .navbar.open {{ transform: translateX(0); }}
+                .navbar a, .dropbtn {{ width: 100%; text-align: left; padding: 15px 20px; box-sizing: border-box; }}
+                .dropdown {{ width: 100%; }}
+                .dropdown-content {{ position: static; box-shadow: none; background-color: var(--secondary-bg); border-radius: 0; }}
+                .dropdown-content a {{ padding-left: 40px; color: var(--text-light); }}
+                main {{ padding-top: 70px; }}
+                .container {{ padding: 10px; margin: 10px; }}
+                th, td {{ padding: 8px; font-size: 13px; }}
+            }}
         </style>
     </head>
     <body>
-        <div class="container">
-            <h1>Multas Totales Acumuladas - {division_titulo}</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Equipo</th>
-                        <th>Total Acumulado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {table_rows}
-                </tbody>
-            </table>
-        </div>
+        <div class="overlay"></div>
+        <header class="header">
+            <h1>Informe de Multas</h1>
+            <button class="hamburger" aria-label="Abrir menú">☰</button>
+            <nav class="navbar">{nav_links_html}</nav>
+        </header>
+        <main>
+            <div class="container" id="main-container">{contenido_html}</div>
+        </main>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {{
+                const hamburger = document.querySelector('.hamburger');
+                const navbar = document.querySelector('.navbar');
+                const overlay = document.querySelector('.overlay');
+                const navLinks = document.querySelectorAll('.navbar a, .navbar .dropbtn');
+
+                function closeMenu() {{
+                    navbar.classList.remove('open');
+                    overlay.style.display = 'none';
+                }}
+
+                hamburger.addEventListener('click', function() {{
+                    navbar.classList.toggle('open');
+                    overlay.style.display = navbar.classList.contains('open') ? 'block' : 'none';
+                }});
+
+                overlay.addEventListener('click', closeMenu);
+
+                function showContent(targetId) {{
+                    document.querySelectorAll('.content-section').forEach(section => {{
+                        section.style.display = 'none';
+                    }});
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {{
+                        targetElement.style.display = 'block';
+                    }}
+
+                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                    const activeLink = document.querySelector(`.nav-link[data-target='${{targetId}}']`);
+                    if (activeLink) {{
+                        activeLink.classList.add('active');
+                    }}
+                    if (window.innerWidth <= 850) {{
+                        closeMenu();
+                    }}
+                }}
+
+                navLinks.forEach(link => {{
+                    link.addEventListener('click', function(e) {{
+                        if (this.classList.contains('dropbtn')) {{
+                            e.preventDefault();
+                            this.nextElementSibling.classList.toggle('show');
+                        }} else {{
+                            e.preventDefault();
+                            showContent(this.dataset.target);
+                        }}
+                    }});
+                }});
+
+                window.addEventListener('click', function(e) {{
+                    if (!e.target.matches('.dropbtn')) {{
+                        document.querySelectorAll('.dropdown-content.show').forEach(dd => {{
+                            dd.classList.remove('show');
+                        }});
+                    }}
+                }});
+
+                showContent('{list(datos_informe.keys())[0]}-totales');
+                const firstNavLink = document.querySelector('.nav-link');
+                if(firstNavLink) firstNavLink.classList.add('active');
+            }});
+        </script>
     </body>
-    </html>
-    """
+    </html>"""
 
     try:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        print(f"Informe HTML de multas totales guardado en '{output_path}'.")
+            f.write(html_completo)
+        print(f"Informe HTML completo guardado en '{output_path}'.")
     except Exception as e:
-        print(f"Error al guardar el archivo HTML total '{output_path}': {e}")
+        print(f"Error al guardar el archivo HTML final: {e}")
 
-
-# --- Funciones de Actualización de Excel ---
-
-# Actualiza una hoja de clasificación dentro de un objeto workbook de openpyxl.
+# --- Funciones de Excel (sin cambios) ---
 def actualizar_hoja_excel(workbook, datos_general, datos_teams, sheet_name, fila_inicio, columna_inicio, name_map={}):
     try:
         sheet = workbook[sheet_name]
@@ -541,7 +585,6 @@ def actualizar_hoja_excel(workbook, datos_general, datos_teams, sheet_name, fila
     except Exception as e:
         print(f"Error procesando la hoja '{sheet_name}' en memoria: {e}")
 
-# Sobrescribe las cabeceras de la hoja 'Capitanes' con los nombres canónicos.
 def actualizar_cabeceras_capitanes(workbook, teams_dict_1a, teams_dict_2a):
     try:
         sheet = workbook["Capitanes"]
@@ -561,7 +604,6 @@ def actualizar_cabeceras_capitanes(workbook, teams_dict_1a, teams_dict_2a):
     except Exception as e:
         print(f"Error al actualizar las cabeceras de la hoja 'Capitanes': {e}")
 
-# Actualiza la hoja de capitanes para una jornada específica.
 def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
     try:
         sheet = workbook["Capitanes"]
@@ -592,7 +634,6 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
     except Exception as e:
         print(f"Error actualizando la hoja 'Capitanes' para la jornada {round_number}: {e}")
 
-# Itera sobre todas las rondas de un campeonato y actualiza la hoja de capitanes.
 def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_name, name_map={}):
     print(f"\n--- INICIANDO ACTUALIZACIÓN HISTÓRICA DE CAPITANES PARA {division_name.upper()} ---")
     sorted_round_numbers = sorted(rounds_map.keys())
@@ -612,31 +653,27 @@ def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_
             continue
         actualizar_hoja_capitanes(workbook, round_number, team_captains)
 
+# --- Lógica de Procesamiento de Datos ---
+
 # Procesa y genera un informe JSON completo para una ronda específica.
 def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={}):
     if not datos_ronda or 'answer' not in datos_ronda or 'matches' not in datos_ronda['answer']:
         print("Error: Respuesta de API de ronda inválida.")
-        return None, None # Devuelve None si falla
-
+        return None, None
     teams_in_round_list = datos_ronda['answer'].get('ranking', [])
     matches = datos_ronda['answer']['matches']
     round_id_actual = datos_ronda['query']['roundId']
     team_map_id = {i + 1: team['_id'] for i, team in enumerate(teams_in_round_list)}
     team_map_name = {i + 1: name_map.get(team['name'], team['name']) for i, team in enumerate(teams_in_round_list)}
-
     resultados_finales, puntos_equipos_por_ronda, jugadores_ronda = [], [], []
     dict_alineaciones, dict_capitanes = {}, {}
-
     for match in matches:
         ids = [team_map_id.get(p) for p in match['p']]
         nombres = [team_map_name.get(p) for p in match['p']]
-
         puntos = match.get('data', {}).get('partial', match.get('m', [0, 0]))
-
         for i in range(2):
             if nombres[i]:
                 puntos_equipos_por_ronda.append({"equipo": nombres[i], "puntos": puntos[i]})
-
         lineups, capitanes = [], []
         for i in range(2):
             if not ids[i]: continue
@@ -647,22 +684,17 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
             datos_lineup = llamar_api("https://api.futmondo.com/1/userteam/roundlineup", payload_lineup)
             lineup_players = datos_lineup.get('answer', {}).get('players', [])
             lineups.append(lineup_players)
-
             capitan = next((p['name'] for p in lineup_players if p.get('cpt')), "N/A")
             capitanes.append(capitan)
-
             if nombres[i]:
                 dict_alineaciones[nombres[i]] = lineup_players
                 dict_capitanes[nombres[i]] = capitan
-
             for player in lineup_players:
                 jugadores_ronda.append({
                     "nombre": player['name'], "puntos": player['points'],
                     "equipo": nombres[i], "es_capitan": player.get('cpt', False)
                 })
-
         jugadores_repetidos = [p['name'] for p in lineups[0] if p['name'] in {p2['name'] for p2 in lineups[1]}]
-
         if nombres[0] and nombres[1]:
             resultados_finales.append({
                 "Combate": f"{nombres[0]} vs {nombres[1]}",
@@ -670,10 +702,8 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
                 f"{nombres[1]}": {"Puntuacion": puntos[1], "Capitan": capitanes[1]},
                 "Jugadores repetidos": jugadores_repetidos
             })
-
     peores_equipos = sorted(puntos_equipos_por_ronda, key=lambda x: x['puntos'])[:3]
     lista_peores_equipos = [{"posicion": i + 1, **equipo} for i, equipo in enumerate(peores_equipos)]
-
     def encontrar_peores(jugadores, key_filter=None):
         min_puntos = float('inf')
         peores_map = defaultdict(list)
@@ -687,10 +717,8 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
                 if jugador['equipo'] and jugador['equipo'] not in peores_map[jugador['nombre']]:
                     peores_map[jugador['nombre']].append(jugador['equipo'])
         return [{"nombre": n, "puntos": min_puntos, "equipos": e} for n, e in peores_map.items()]
-
     peores_capitanes_final = encontrar_peores(jugadores_ronda, lambda j: j.get('es_capitan'))
     peores_jugadores_final = encontrar_peores(jugadores_ronda)
-
     resumen_final = {
         "Resultados por combate": resultados_finales,
         "Peor Capitan": peores_capitanes_final,
@@ -698,59 +726,37 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
         "Los 3 peores equipos de la ronda": lista_peores_equipos
     }
     guardar_respuesta(resumen_final, output_file)
-
     multas_jornada = calcular_multas_jornada(
         teams_in_round=list(team_map_name.values()), matches=matches, team_map_name=team_map_name,
         dict_alineaciones=dict_alineaciones, dict_capitanes=dict_capitanes,
         lista_peores_equipos=lista_peores_equipos, peores_jugadores_final=peores_jugadores_final,
         peores_capitanes_final=peores_capitanes_final
     )
-
     return multas_jornada
 
-# Itera sobre todas las jornadas para procesar resultados y multas.
+# Itera sobre todas las jornadas para procesar y DEVOLVER resultados y multas.
 def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str):
-    print(f"\n--- INICIANDO ANÁLISIS HISTÓRICO PARA {division_str.upper()} ---")
+    print(f"\n--- RECOPILANDO DATOS DE MULTAS PARA {division_str.upper()} ---")
     multas_acumuladas = defaultdict(float)
-
+    datos_jornadas = []
     sorted_rounds = sorted(rounds_map.keys())
     for round_number in sorted_rounds:
         round_id = rounds_map[round_number]
-        print(f"\nProcesando Jornada {round_number}...")
-
+        print(f"Procesando Jornada {round_number}...")
         payload_round = copy.deepcopy(payload_base)
         payload_round['query'].update({'roundNumber': round_id})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
-
         if datos_ronda and 'answer' in datos_ronda:
-            datos_ronda['query']['roundId'] = round_id # Aseguramos que el ID está presente
-
+            datos_ronda['query']['roundId'] = round_id
             output_file = f"resultados/jornada_{round_number}_{division_str}.json"
             multas_de_la_jornada = procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map)
-
             if multas_de_la_jornada:
-                # Guardar el JSON de multas de la jornada
-                multas_output_file_json = f"multas/{division_str}/multas_jornada_{round_number}.json"
-                guardar_respuesta(multas_de_la_jornada, multas_output_file_json)
-
-                # --- [MODIFICACIÓN] Generar el HTML de multas de la jornada ---
-                multas_output_file_html = f"multas/{division_str}/multas_jornada_{round_number}.html"
-                generar_html_multas_jornada(multas_de_la_jornada, round_number, division_str, multas_output_file_html)
-
-                # Acumular multas
+                datos_jornadas.append({'numero': round_number, 'multas': multas_de_la_jornada})
                 for team, data in multas_de_la_jornada.items():
                     multas_acumuladas[team] += data.get('multa_total', 0.0)
         else:
             print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
-
-    # Guardar el total de multas en JSON
-    multas_totales_file_json = f"multas/multas_totales_{division_str}.json"
-    guardar_respuesta(dict(multas_acumuladas), multas_totales_file_json)
-
-    # --- [MODIFICACIÓN] Generar el HTML del total de multas ---
-    multas_totales_file_html = f"multas/multas_totales_{division_str}.html"
-    generar_html_multas_totales(multas_acumuladas, division_str, multas_totales_file_html)
-
+    return datos_jornadas, dict(multas_acumuladas)
 
 # --- Función Principal ---
 def main():
@@ -787,10 +793,8 @@ def main():
 
     rounds_data_1a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_1a))
     rounds_data_2a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_2a))
-
     rounds_map_1a = procesar_rondas_api(rounds_data_1a.get('answer', []))
     rounds_map_2a = procesar_rondas_api(rounds_data_2a.get('answer', []))
-
     if not rounds_map_1a or not rounds_map_2a:
         print("Error: No se pudo obtener y procesar la lista de rondas de la API. Finalizando.")
         return
@@ -799,7 +803,6 @@ def main():
     payload_round_1a = copy.deepcopy(payload_1a)
     payload_round_1a['query'].update({'roundNumber': latest_round_id_1a})
     datos_ronda_1a = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round_1a)
-
     latest_round_id_2a = rounds_map_2a[max(rounds_map_2a.keys())]
     payload_round_2a = copy.deepcopy(payload_2a)
     payload_round_2a['query'].update({'roundNumber': latest_round_id_2a})
@@ -810,69 +813,65 @@ def main():
         round_ranking_1a = datos_ronda_1a['answer']['ranking']
         if len(round_ranking_1a) >= len(TEAMS_1A):
             map_1a = {round_ranking_1a[i]['name']: TEAMS_1A[str(i + 1)] for i in range(len(TEAMS_1A))}
-            print("Mapeo de nombres para 1a División creado con éxito.")
-        else:
-            print(f"ADVERTENCIA: No se pudo crear el mapeo para 1a División. La API de ronda devolvió {len(round_ranking_1a)} equipos y se proporcionaron {len(TEAMS_1A)}.")
-
     if datos_ronda_2a and 'answer' in datos_ronda_2a and 'ranking' in datos_ronda_2a['answer']:
         round_ranking_2a = datos_ronda_2a['answer']['ranking']
         if len(round_ranking_2a) >= len(TEAMS_2A):
             map_2a = {round_ranking_2a[i]['name']: TEAMS_2A[str(i + 1)] for i in range(len(TEAMS_2A))}
-            print("Mapeo de nombres para 2a División creado con éxito.")
+
+    # --- [LÓGICA CONDICIONAL] PROCESO DE EXCEL ---
+    if modo in ['local', 'onedrive']:
+        print("\n--- PROCESANDO ARCHIVO EXCEL ---")
+        datos_general_1a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_1a))
+        datos_general_2a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_2a))
+        payload_teams_1a = copy.deepcopy(payload_1a); payload_teams_1a['query'] = {"championshipId": payload_1a["query"]["championshipId"]}
+        datos_teams_1a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_1a)
+        payload_teams_2a = copy.deepcopy(payload_2a); payload_teams_2a['query'] = {"championshipId": payload_2a["query"]["championshipId"]}
+        datos_teams_2a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_2a)
+
+        if all([datos_general_1a, datos_teams_1a, datos_general_2a, datos_teams_2a]):
+            workbook = None
+            try:
+                if modo == 'local':
+                    workbook = openpyxl.load_workbook(LOCAL_EXCEL_FILENAME)
+                else:
+                    access_token = get_access_token()
+                    if not access_token: raise Exception("No se pudo obtener el token de acceso.")
+                    drive_id, item_id = get_drive_item_from_share_link(access_token, ONEDRIVE_SHARE_LINK)
+                    excel_content = download_excel_from_onedrive(access_token, drive_id, item_id)
+                    workbook = openpyxl.load_workbook(io.BytesIO(excel_content))
+
+                if workbook:
+                    actualizar_cabeceras_capitanes(workbook, TEAMS_1A, TEAMS_2A)
+                    actualizar_hoja_excel(workbook, datos_general_1a, datos_teams_1a, "Clasificación 1a DIV", 5, 2, map_1a)
+                    actualizar_hoja_excel(workbook, datos_general_2a, datos_teams_2a, "Clasificación 2a DIV", 2, 3, map_2a)
+                    actualizar_capitanes_historico(workbook, rounds_map_1a, payload_1a, "1a División", map_1a)
+                    actualizar_capitanes_historico(workbook, rounds_map_2a, payload_2a, "2a División", map_2a)
+
+                    if modo == 'local':
+                        workbook.save(LOCAL_EXCEL_FILENAME)
+                        print(f"\nArchivo '{LOCAL_EXCEL_FILENAME}' guardado localmente.")
+                    else:
+                        buffer = io.BytesIO()
+                        workbook.save(buffer)
+                        upload_excel_to_onedrive(access_token, drive_id, item_id, buffer.getvalue())
+            except Exception as e:
+                print(f"Error durante el procesamiento del Excel: {e}")
         else:
-            print(f"ADVERTENCIA: No se pudo crear el mapeo para 2a División. La API de ronda devolvió {len(round_ranking_2a)} equipos y se proporcionaron {len(TEAMS_2A)}.")
+            print("Faltan datos clave de la API para el Excel. Saltando actualización del Excel.")
+    else:
+        print("\n--- MODO 'SOLO MULTAS' SELECCIONADO: SALTANDO PROCESO DE EXCEL ---")
 
-    datos_general_1a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_1a))
-    datos_general_2a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_2a))
 
-    payload_teams_1a = copy.deepcopy(payload_1a)
-    payload_teams_1a['query'] = {"championshipId": payload_1a["query"]["championshipId"]}
-    datos_teams_1a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_1a)
+    # --- GENERACIÓN DEL INFORME HTML (SE EJECUTA SIEMPRE) ---
+    datos_jornadas_1a, totales_1a = procesar_historico_jornadas(rounds_map_1a, payload_1a, map_1a, "primera")
+    datos_jornadas_2a, totales_2a = procesar_historico_jornadas(rounds_map_2a, payload_2a, map_2a, "segunda")
 
-    payload_teams_2a = copy.deepcopy(payload_2a)
-    payload_teams_2a['query'] = {"championshipId": payload_2a["query"]["championshipId"]}
-    datos_teams_2a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_2a)
+    datos_informe_completo = {
+        "primera": {"jornadas": datos_jornadas_1a, "totales": totales_1a},
+        "segunda": {"jornadas": datos_jornadas_2a, "totales": totales_2a}
+    }
 
-    if not all([datos_general_1a, datos_teams_1a, datos_general_2a, datos_teams_2a, datos_ronda_1a, datos_ronda_2a]):
-        print("Faltan datos clave de la API. No se puede actualizar el Excel. Finalizando.")
-        return
-
-    print(f"\n--- CARGANDO EXCEL (MODO: {modo}) ---")
-    workbook, access_token, drive_id, item_id = None, None, None, None
-    try:
-        if modo == 'local':
-            workbook = openpyxl.load_workbook(LOCAL_EXCEL_FILENAME)
-            print(f"Archivo '{LOCAL_EXCEL_FILENAME}' cargado localmente.")
-        else:
-            access_token = get_access_token()
-            if not access_token: raise Exception("No se pudo obtener el token de acceso.")
-            drive_id, item_id = get_drive_item_from_share_link(access_token, ONEDRIVE_SHARE_LINK)
-            excel_content = download_excel_from_onedrive(access_token, drive_id, item_id)
-            workbook = openpyxl.load_workbook(io.BytesIO(excel_content))
-    except Exception as e:
-        print(f"Error fatal al cargar el archivo Excel: {e}")
-        return
-
-    actualizar_cabeceras_capitanes(workbook, TEAMS_1A, TEAMS_2A)
-    actualizar_hoja_excel(workbook, datos_general_1a, datos_teams_1a, "Clasificación 1a DIV", 5, 2, map_1a)
-    actualizar_hoja_excel(workbook, datos_general_2a, datos_teams_2a, "Clasificación 2a DIV", 2, 3, map_2a)
-    actualizar_capitanes_historico(workbook, rounds_map_1a, payload_1a, "1a División", map_1a)
-    actualizar_capitanes_historico(workbook, rounds_map_2a, payload_2a, "2a División", map_2a)
-
-    try:
-        if modo == 'local':
-            workbook.save(LOCAL_EXCEL_FILENAME)
-            print(f"\nArchivo '{LOCAL_EXCEL_FILENAME}' guardado localmente con éxito.")
-        else:
-            buffer = io.BytesIO()
-            workbook.save(buffer)
-            upload_excel_to_onedrive(access_token, drive_id, item_id, buffer.getvalue())
-    except Exception as e:
-        print(f"\nError al guardar el archivo Excel: {e}")
-
-    # Procesar todas las jornadas para ambas divisiones para generar los JSON y HTML de multas
-    procesar_historico_jornadas(rounds_map_1a, payload_1a, map_1a, "primera")
-    procesar_historico_jornadas(rounds_map_2a, payload_2a, map_2a, "segunda")
+    generar_pagina_html_completa(datos_informe_completo, "informe_multas.html")
 
     print("\n--- Proceso completado. ---")
 
