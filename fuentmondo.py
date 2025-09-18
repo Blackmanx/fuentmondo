@@ -324,7 +324,7 @@ def calcular_multas_jornada(
     for team_name, alineacion in dict_alineaciones.items():
         nombres_jugadores = {p['name'] for p in alineacion}
         if not nombres_peores_jugadores.isdisjoint(nombres_jugadores):
-             multas_finales[team_name]["desglose"]["alinear_peor_jugador"] = {"aplicado": True, "multa": 1.0}
+                multas_finales[team_name]["desglose"]["alinear_peor_jugador"] = {"aplicado": True, "multa": 1.0}
 
     nombres_peores_capitanes = {p['nombre'] for p in peores_capitanes_final}
     for team_name, capitan in dict_capitanes.items():
@@ -336,6 +336,180 @@ def calcular_multas_jornada(
         multas_finales[team_name]['multa_total'] = round(total, 2)
 
     return multas_finales
+
+# --- [NUEVA FUNCIÓN] ---
+# Genera un archivo HTML con la tabla de multas de una jornada.
+def generar_html_multas_jornada(multas_data, jornada_numero, division_str, output_path):
+    # Formatear el nombre de la división para el título
+    division_titulo = "1ª División" if division_str == "primera" else "2ª División"
+
+    # Ordenar equipos por la multa total de mayor a menor
+    sorted_teams = sorted(multas_data.items(), key=lambda item: item[1]['multa_total'], reverse=True)
+
+    # Construir las filas de la tabla
+    table_rows = ""
+    for team_name, data in sorted_teams:
+        multa_total = data.get('multa_total', 0.0)
+        if multa_total == 0: continue # Opcional: Omitir equipos sin multas
+
+        desglose = data.get('desglose', {})
+        desglose_html = "<ul>"
+
+        # Jugadores Repetidos
+        jr = desglose.get("jugadores_repetidos", {})
+        if jr.get("multa", 0) > 0:
+            desglose_html += f"<li>Jugadores repetidos ({jr.get('cantidad', 0)}): {jr.get('multa', 0):.2f}€</li>"
+
+        # Capitán repetido con rival
+        cr = desglose.get("capitan_repetido_con_rival", {})
+        if cr.get("multa", 0) > 0:
+            desglose_html += f"<li>Capitán repetido con rival: {cr.get('multa', 0):.2f}€</li>"
+
+        # Tenías capitán rival
+        tcr = desglose.get("tenias_capitan_rival", {})
+        if tcr.get("multa", 0) > 0:
+            desglose_html += f"<li>Alinear al capitán del rival: {tcr.get('multa', 0):.2f}€</li>"
+
+        # Peor equipo jornada
+        pe = desglose.get("peor_equipo_jornada", {})
+        if pe.get("multa", 0) > 0:
+            pos_map = {1: "Peor", 2: "2º Peor", 3: "3er Peor"}
+            pos_str = pos_map.get(pe.get("posicion"), f"{pe.get('posicion')}º Peor")
+            desglose_html += f"<li>{pos_str} equipo de la jornada: {pe.get('multa', 0):.2f}€</li>"
+
+        # Alinear peor jugador
+        apj = desglose.get("alinear_peor_jugador", {})
+        if apj.get("multa", 0) > 0:
+            desglose_html += f"<li>Alinear al peor jugador de la jornada: {apj.get('multa', 0):.2f}€</li>"
+
+        # Elegir peor capitán
+        epc = desglose.get("elegir_peor_capitan", {})
+        if epc.get("multa", 0) > 0:
+            desglose_html += f"<li>Elegir al peor capitán de la jornada: {epc.get('multa', 0):.2f}€</li>"
+
+        desglose_html += "</ul>"
+
+        table_rows += f"""
+        <tr>
+            <td>{team_name}</td>
+            <td class="total-multa">{multa_total:.2f}€</td>
+            <td class="desglose">{desglose_html}</td>
+        </tr>
+        """
+
+    # Plantilla HTML
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Multas Jornada {jornada_numero} - {division_titulo}</title>
+        <style>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }}
+            .container {{ max-width: 900px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 8px; }}
+            h1 {{ text-align: center; color: #2c3e50; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th, td {{ padding: 12px 15px; border: 1px solid #ddd; text-align: left; }}
+            th {{ background-color: #3498db; color: white; text-align: center; }}
+            tr:nth-child(even) {{ background-color: #f2f2f2; }}
+            tr:hover {{ background-color: #e8f4f8; }}
+            .total-multa {{ font-weight: bold; text-align: center; color: #c0392b; }}
+            .desglose ul {{ margin: 0; padding-left: 20px; }}
+            .desglose li {{ margin-bottom: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Multas Jornada {jornada_numero} - {division_titulo}</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Equipo</th>
+                        <th style="width: 15%;">Multa Total</th>
+                        <th style="width: 55%;">Desglose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows}
+                </tbody>
+            </table>
+        </div>
+    </body>
+    </html>
+    """
+
+    try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        print(f"Informe HTML de multas de la jornada guardado en '{output_path}'.")
+    except Exception as e:
+        print(f"Error al guardar el archivo HTML '{output_path}': {e}")
+
+# --- [NUEVA FUNCIÓN] ---
+# Genera un archivo HTML con la tabla de multas totales acumuladas.
+def generar_html_multas_totales(multas_acumuladas, division_str, output_path):
+    division_titulo = "1ª División" if division_str == "primera" else "2ª División"
+
+    # Ordenar equipos por multa total de mayor a menor
+    sorted_teams = sorted(multas_acumuladas.items(), key=lambda item: item[1], reverse=True)
+
+    table_rows = ""
+    for team_name, total_multa in sorted_teams:
+        table_rows += f"""
+        <tr>
+            <td>{team_name}</td>
+            <td class="total-multa">{total_multa:.2f}€</td>
+        </tr>
+        """
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Multas Totales - {division_titulo}</title>
+        <style>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }}
+            .container {{ max-width: 600px; margin: auto; background: white; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius: 8px; }}
+            h1 {{ text-align: center; color: #2c3e50; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            th, td {{ padding: 12px 15px; border: 1px solid #ddd; text-align: left; }}
+            th {{ background-color: #c0392b; color: white; text-align: center; }}
+            tr:nth-child(even) {{ background-color: #f2f2f2; }}
+            tr:hover {{ background-color: #f5e8e8; }}
+            .total-multa {{ font-weight: bold; text-align: right; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Multas Totales Acumuladas - {division_titulo}</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Equipo</th>
+                        <th>Total Acumulado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows}
+                </tbody>
+            </table>
+        </div>
+    </body>
+    </html>
+    """
+
+    try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        print(f"Informe HTML de multas totales guardado en '{output_path}'.")
+    except Exception as e:
+        print(f"Error al guardar el archivo HTML total '{output_path}': {e}")
+
 
 # --- Funciones de Actualización de Excel ---
 
@@ -534,7 +708,6 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
 
     return multas_jornada
 
-# --- [NUEVA FUNCIÓN] ---
 # Itera sobre todas las jornadas para procesar resultados y multas.
 def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str):
     print(f"\n--- INICIANDO ANÁLISIS HISTÓRICO PARA {division_str.upper()} ---")
@@ -556,17 +729,27 @@ def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str
             multas_de_la_jornada = procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map)
 
             if multas_de_la_jornada:
-                multas_output_file = f"multas/{division_str}/multas_jornada_{round_number}.json"
-                guardar_respuesta(multas_de_la_jornada, multas_output_file)
+                # Guardar el JSON de multas de la jornada
+                multas_output_file_json = f"multas/{division_str}/multas_jornada_{round_number}.json"
+                guardar_respuesta(multas_de_la_jornada, multas_output_file_json)
+
+                # --- [MODIFICACIÓN] Generar el HTML de multas de la jornada ---
+                multas_output_file_html = f"multas/{division_str}/multas_jornada_{round_number}.html"
+                generar_html_multas_jornada(multas_de_la_jornada, round_number, division_str, multas_output_file_html)
+
                 # Acumular multas
                 for team, data in multas_de_la_jornada.items():
                     multas_acumuladas[team] += data.get('multa_total', 0.0)
         else:
             print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
 
-    # Guardar el total de multas
-    multas_totales_file = f"multas/multas_totales_{division_str}.json"
-    guardar_respuesta(dict(multas_acumuladas), multas_totales_file)
+    # Guardar el total de multas en JSON
+    multas_totales_file_json = f"multas/multas_totales_{division_str}.json"
+    guardar_respuesta(dict(multas_acumuladas), multas_totales_file_json)
+
+    # --- [MODIFICACIÓN] Generar el HTML del total de multas ---
+    multas_totales_file_html = f"multas/multas_totales_{division_str}.html"
+    generar_html_multas_totales(multas_acumuladas, division_str, multas_totales_file_html)
 
 
 # --- Función Principal ---
@@ -687,17 +870,9 @@ def main():
     except Exception as e:
         print(f"\nError al guardar el archivo Excel: {e}")
 
-    # --- [MODIFICACIÓN] ---
-    # Procesar todas las jornadas para ambas divisiones
+    # Procesar todas las jornadas para ambas divisiones para generar los JSON y HTML de multas
     procesar_historico_jornadas(rounds_map_1a, payload_1a, map_1a, "primera")
     procesar_historico_jornadas(rounds_map_2a, payload_2a, map_2a, "segunda")
-
-    team_id_motobetis = "66b9c5d20edfaa6140f45f75"
-    if rounds_map_2a:
-        latest_round_id_2a_debug = rounds_map_2a[max(rounds_map_2a.keys())]
-        obtener_y_mostrar_alineacion(payload_2a, team_id_motobetis, latest_round_id_2a_debug, "Motobetis a primera!")
-    else:
-        print("No se pudo ejecutar la depuración para Motobetis: el mapa de rondas está vacío.")
 
     print("\n--- Proceso completado. ---")
 
