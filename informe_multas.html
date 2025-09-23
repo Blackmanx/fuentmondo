@@ -4,15 +4,16 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Informe de Multas - SuperLiga Fuentmondo</title>
+        <title>Informe - SuperLiga Fuentmondo</title>
         <style>
             :root {
                 --primary-bg: #2c3e50; --secondary-bg: #34495e; --accent-color: #3498db;
                 --text-light: #ecf0f1; --text-dark: #333; --border-color: #ddd;
                 --body-bg: #f4f7f6; --white: #fff; --shadow: rgba(0,0,0,0.1);
+                --warning-bg: #f1c40f;
             }
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: var(--body-bg); color: var(--text-dark); }
-            .container { max-width: 1100px; margin: 20px auto; padding: 20px; background: var(--white); box-shadow: 0 0 15px var(--shadow); border-radius: 8px; }
+            .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: var(--white); box-shadow: 0 0 15px var(--shadow); border-radius: 8px; }
             .header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background-color: var(--primary-bg); color: var(--text-light); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 1001; }
             .header h1 { margin: 0; font-size: 1.5em; }
             .hamburger { display: none; font-size: 24px; background: none; border: none; color: var(--text-light); cursor: pointer; }
@@ -21,7 +22,7 @@
             .navbar a:hover, .dropdown:hover .dropbtn { background-color: var(--secondary-bg); }
             .navbar a.active { background-color: var(--accent-color); font-weight: bold; }
             .dropdown { position: relative; display: inline-block; }
-            .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0 8px 16px var(--shadow); z-index: 1; border-radius: 4px; overflow: hidden; }
+            .dropdown-content { display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0 8px 16px var(--shadow); z-index: 1; border-radius: 4px; overflow: hidden; max-height: 400px; overflow-y: auto; }
             .dropdown-content a { color: var(--text-dark); padding: 12px 16px; display: block; text-align: left; }
             .dropdown-content a:hover { background-color: #f1f1f1; }
             .dropdown-content.show { display: block; }
@@ -29,13 +30,14 @@
             main { padding-top: 80px; }
             h2 { text-align: center; color: var(--primary-bg); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-top: 0; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 12px 15px; border: 1px solid var(--border-color); text-align: left; }
+            th, td { padding: 12px 15px; border: 1px solid var(--border-color); text-align: left; white-space: nowrap; }
             th { background-color: var(--accent-color); color: var(--white); }
             tr:nth-child(even) { background-color: #f2f2f2; }
             .total-multa { font-weight: bold; text-align: center; color: #c0392b; }
             .desglose ul { margin: 0; padding-left: 20px; }
             .desglose li { margin-bottom: 5px; }
-            @media screen and (max-width: 850px) {
+            .repeated-captain { background-color: var(--warning-bg); font-weight: bold; color: var(--text-dark); }
+            @media screen and (max-width: 950px) {
                 .header h1 { font-size: 1.2em; }
                 .hamburger { display: block; }
                 .navbar { position: fixed; top: 0; left: 0; height: 100%; width: 280px; background-color: var(--primary-bg); flex-direction: column; align-items: flex-start; padding-top: 60px; transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 1000; }
@@ -53,12 +55,158 @@
     <body>
         <div class="overlay"></div>
         <header class="header">
-            <h1>Informe de Multas</h1>
+            <h1>Informe SuperLiga</h1>
             <button class="hamburger" aria-label="Abrir menú">☰</button>
-            <nav class="navbar"><a href="#" class="nav-link" data-target="primera-totales">Totales 1ª División</a><div class="dropdown"><button class="dropbtn">Jornadas 1ª División &#9662;</button><div class="dropdown-content"><a href="#" data-target="primera-jornada-1">Jornada 1</a><a href="#" data-target="primera-jornada-2">Jornada 2</a><a href="#" data-target="primera-jornada-3">Jornada 3</a><a href="#" data-target="primera-jornada-4">Jornada 4</a><a href="#" data-target="primera-jornada-6">Jornada 6</a></div></div><a href="#" class="nav-link" data-target="segunda-totales">Totales 2ª División</a><div class="dropdown"><button class="dropbtn">Jornadas 2ª División &#9662;</button><div class="dropdown-content"><a href="#" data-target="segunda-jornada-1">Jornada 1</a><a href="#" data-target="segunda-jornada-2">Jornada 2</a><a href="#" data-target="segunda-jornada-3">Jornada 3</a><a href="#" data-target="segunda-jornada-4">Jornada 4</a><a href="#" data-target="segunda-jornada-6">Jornada 6</a></div></div></nav>
+            <nav class="navbar"><a href="#" class="nav-link" data-target="primera-clasificacion">Clasificación 1ª División</a><a href="#" class="nav-link" data-target="primera-capitanes">Capitanes 1ª División</a><a href="#" class="nav-link" data-target="primera-totales">Multas Totales 1ª División</a><div class="dropdown"><button class="dropbtn">Multas Jornada (1ª División) &#9662;</button><div class="dropdown-content"><a href="#" data-target="primera-jornada-1">Jornada 1</a><a href="#" data-target="primera-jornada-2">Jornada 2</a><a href="#" data-target="primera-jornada-3">Jornada 3</a><a href="#" data-target="primera-jornada-4">Jornada 4</a><a href="#" data-target="primera-jornada-5">Jornada 5</a><a href="#" data-target="primera-jornada-6">Jornada 6</a></div></div><a href="#" class="nav-link" data-target="segunda-clasificacion">Clasificación 2ª División</a><a href="#" class="nav-link" data-target="segunda-capitanes">Capitanes 2ª División</a><a href="#" class="nav-link" data-target="segunda-totales">Multas Totales 2ª División</a><div class="dropdown"><button class="dropbtn">Multas Jornada (2ª División) &#9662;</button><div class="dropdown-content"><a href="#" data-target="segunda-jornada-1">Jornada 1</a><a href="#" data-target="segunda-jornada-2">Jornada 2</a><a href="#" data-target="segunda-jornada-3">Jornada 3</a><a href="#" data-target="segunda-jornada-4">Jornada 4</a><a href="#" data-target="segunda-jornada-5">Jornada 5</a><a href="#" data-target="segunda-jornada-6">Jornada 6</a></div></div></nav>
         </header>
         <main>
             <div class="container" id="main-container">
+        <div id="primera-clasificacion" class="content-section">
+            <h2>Clasificación - 1ª División</h2>
+            
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Equipo</th>
+                <th>Puntos (Jornada)</th>
+                <th>Puntos (General)</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center;">1</td>
+            <td>QUE BARBARIDAD FC</td>
+            <td style="text-align:center;">18</td>
+            <td style="text-align:center;">345</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">2</td>
+            <td>El Huracán CF</td>
+            <td style="text-align:center;">18</td>
+            <td style="text-align:center;">334</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">3</td>
+            <td>Lim Hijo de Puta</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">352</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">4</td>
+            <td>Juaki la bomba</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">309</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">5</td>
+            <td>THE LIONS</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">302</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">6</td>
+            <td>CD Congelados</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">296</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">7</td>
+            <td>PANAKOTA F.F.</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">289</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">8</td>
+            <td>Poli Ejido CF</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">288</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">9</td>
+            <td>AL-CARRER F.C.</td>
+            <td style="text-align:center;">13</td>
+            <td style="text-align:center;">338</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">10</td>
+            <td>Larios Limon FC</td>
+            <td style="text-align:center;">13</td>
+            <td style="text-align:center;">319</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">11</td>
+            <td>LA MARRANERA</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">328</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">12</td>
+            <td>CALAMARES CON TORRIJAS🦑🍞</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">311</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">13</td>
+            <td>Fuentino Pérez</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">304</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">14</td>
+            <td>MORRITOS F.C.</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">291</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">15</td>
+            <td>LOS POKÉMON 🐭🟡🐭</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">281</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">16</td>
+            <td>Real Pezqueñines FC</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">280</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">17</td>
+            <td>Real 🥚🥚 Bailarines 🪩F.C</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">273</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">18</td>
+            <td>Real Fermín C.F.</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">234</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">19</td>
+            <td>Galácticos de la noche FC</td>
+            <td style="text-align:center;">3</td>
+            <td style="text-align:center;">285</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">20</td>
+            <td>EL CHOLISMO FC</td>
+            <td style="text-align:center;">3</td>
+            <td style="text-align:center;">246</td>
+        </tr></tbody>
+    </table>
+        </div>
+        <div id="primera-capitanes" class="content-section">
+            <h2>Historial de Capitanes - 1ª División</h2>
+            
+    <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>Jornada</th><th>AL-CARRER F.C.</th><th>CALAMARES CON TORRIJAS🦑🍞</th><th>CD Congelados</th><th>EL CHOLISMO FC</th><th>El Huracán CF</th><th>Fuentino Pérez</th><th>Galácticos de la noche FC</th><th>Juaki la bomba</th><th>LA MARRANERA</th><th>LOS POKÉMON 🐭🟡🐭</th><th>Larios Limon FC</th><th>Lim Hijo de Puta</th><th>MORRITOS F.C.</th><th>PANAKOTA F.F.</th><th>Poli Ejido CF</th><th>QUE BARBARIDAD FC</th><th>Real Fermín C.F.</th><th>Real Pezqueñines FC</th><th>Real 🥚🥚 Bailarines 🪩F.C</th><th>THE LIONS</th></tr></thead>
+            <tbody><tr><td><strong>Jornada 1</strong></td><td>Ferrán Torres </td><td>Nicolás Pépé</td><td>Güler</td><td>Oyarzabal</td><td>Eyong</td><td>Nicolás Pépé</td><td>Güler</td><td>Güler</td><td>Ferrán Torres </td><td>Nicolás Pépé</td><td>Nicolás Pépé</td><td>Nicolás Pépé</td><td>Nicolás Pépé</td><td>Nicolás Pépé</td><td>Nicolás Pépé</td><td>Ferrán Torres </td><td>Güler</td><td>Nicolás Pépé</td><td>Nicolás Pépé</td><td>Gerard Moreno</td></tr><tr><td><strong>Jornada 2</strong></td><td>Güler</td><td>Julián Álvarez</td><td>Oyarzabal</td><td>Kubo</td><td>Sorloth</td><td>Sorloth</td><td>Iñaki Williams</td><td>Eyong</td><td>Lukebakio</td><td>Riquelme</td><td>Ferrán Torres </td><td>Ferrán Torres </td><td>Almada</td><td>Almada</td><td>Ferrán Torres </td><td>Sorloth</td><td>Giuliano Simeone</td><td>Almada</td><td>Almada</td><td>Güler</td></tr><tr><td><strong>Jornada 3</strong></td><td>Güler</td><td>Tchouameni</td><td>Puado</td><td>Kubo</td><td>Oyarzabal</td><td>Gueye</td><td>Hugo Duro</td><td>Güler</td><td>Sancet</td><td>Álvaro Rodríguez</td><td>Oyarzabal</td><td>Güler</td><td>Aimar Oroz</td><td>Sancet</td><td>Ferrán Torres </td><td>Sorloth</td><td>N/A</td><td>Carlos Vicente</td><td>N/A</td><td>Güler</td></tr><tr><td><strong>Jornada 4</strong></td><td>Pedri</td><td>Pedri</td><td>Sancet</td><td>Germán Valera</td><td>Sancet</td><td>Sancet</td><td>Sancet</td><td>Sancet</td><td>Antony</td><td>Sancet</td><td>Sancet</td><td>Sancet</td><td>Sancet</td><td>Güler</td><td>Sancet</td><td>Antony</td><td>Berenguer</td><td>Borja Iglesias</td><td>Alfon</td><td>Alfon</td></tr><tr><td><strong>Jornada 5</strong></td><td>Rashford</td><td>Güler</td><td>Jorge De Frutos</td><td>Güler</td><td>Antony</td><td>Jorge De Frutos</td><td>Antony</td><td>Antony</td><td>Antony</td><td>Antony</td><td>Eyong</td><td>Carlos Vicente</td><td>Ferrán Torres </td><td>Antony</td><td>Rafa Mir</td><td>Ferrán Torres </td><td>Antony</td><td>Antony</td><td>Vanat</td><td>Antony</td></tr><tr><td><strong>Jornada 6</strong></td><td class="repeated-captain">Güler</td><td>Sancet</td><td>Güler</td><td class="repeated-captain">Kubo</td><td>Iñaki Williams</td><td>Ferrán Torres </td><td>Iago Aspas</td><td>Rashford</td><td>Cucho</td><td>Buchanan</td><td>Edu Expósito</td><td>Güler</td><td>N/A</td><td>Sancet</td><td>Budimir</td><td>Güler</td><td>Giuliano Simeone</td><td>Güler</td><td>N/A</td><td>N/A</td></tr></tbody>
+        </table>
+    </div>
+    
+        </div>
         <div id="primera-totales" class="content-section">
             <h2>Multas Totales - 1ª División</h2>
             
@@ -72,83 +220,83 @@
         <tbody>
         <tr>
             <td>Lim Hijo de Puta</td>
+            <td class="total-multa">20.50€</td>
+        </tr>
+        <tr>
+            <td>LOS POKÉMON 🐭🟡🐭</td>
+            <td class="total-multa">18.50€</td>
+        </tr>
+        <tr>
+            <td>QUE BARBARIDAD FC</td>
+            <td class="total-multa">18.00€</td>
+        </tr>
+        <tr>
+            <td>Fuentino Pérez</td>
+            <td class="total-multa">17.00€</td>
+        </tr>
+        <tr>
+            <td>EL CHOLISMO FC</td>
+            <td class="total-multa">17.00€</td>
+        </tr>
+        <tr>
+            <td>Juaki la bomba</td>
             <td class="total-multa">16.50€</td>
         </tr>
         <tr>
-            <td>PANAKOTA F.F.</td>
+            <td>Galácticos de la noche FC</td>
+            <td class="total-multa">16.00€</td>
+        </tr>
+        <tr>
+            <td>Poli Ejido CF</td>
+            <td class="total-multa">16.00€</td>
+        </tr>
+        <tr>
+            <td>Larios Limon FC</td>
             <td class="total-multa">16.00€</td>
         </tr>
         <tr>
             <td>El Huracán CF</td>
-            <td class="total-multa">16.00€</td>
+            <td class="total-multa">15.00€</td>
         </tr>
         <tr>
-            <td>QUE BARBARIDAD FC</td>
-            <td class="total-multa">15.50€</td>
-        </tr>
-        <tr>
-            <td>Larios Limon FC</td>
-            <td class="total-multa">15.50€</td>
-        </tr>
-        <tr>
-            <td>LA MARRANERA</td>
+            <td>PANAKOTA F.F.</td>
             <td class="total-multa">14.50€</td>
         </tr>
         <tr>
-            <td>Juaki la bomba</td>
+            <td>CD Congelados</td>
             <td class="total-multa">14.00€</td>
         </tr>
         <tr>
-            <td>Poli Ejido CF</td>
-            <td class="total-multa">13.50€</td>
-        </tr>
-        <tr>
-            <td>LOS POKÉMON 🐭🟡🐭</td>
-            <td class="total-multa">13.50€</td>
-        </tr>
-        <tr>
-            <td>EL CHOLISMO FC</td>
-            <td class="total-multa">12.50€</td>
-        </tr>
-        <tr>
-            <td>Galácticos de la noche FC</td>
-            <td class="total-multa">12.00€</td>
-        </tr>
-        <tr>
-            <td>AL-CARRER F.C.</td>
-            <td class="total-multa">12.00€</td>
-        </tr>
-        <tr>
-            <td>CD Congelados</td>
-            <td class="total-multa">11.00€</td>
-        </tr>
-        <tr>
-            <td>THE LIONS</td>
-            <td class="total-multa">11.00€</td>
-        </tr>
-        <tr>
-            <td>Real Fermín C.F.</td>
-            <td class="total-multa">11.00€</td>
-        </tr>
-        <tr>
-            <td>Fuentino Pérez</td>
-            <td class="total-multa">10.50€</td>
-        </tr>
-        <tr>
-            <td>Real 🥚🥚 Bailarines 🪩F.C</td>
-            <td class="total-multa">10.50€</td>
+            <td>LA MARRANERA</td>
+            <td class="total-multa">14.00€</td>
         </tr>
         <tr>
             <td>Real Pezqueñines FC</td>
-            <td class="total-multa">10.00€</td>
+            <td class="total-multa">14.00€</td>
         </tr>
         <tr>
-            <td>CALAMARES CON TORRIJAS🦑🍞</td>
-            <td class="total-multa">8.50€</td>
+            <td>THE LIONS</td>
+            <td class="total-multa">13.00€</td>
+        </tr>
+        <tr>
+            <td>AL-CARRER F.C.</td>
+            <td class="total-multa">12.50€</td>
+        </tr>
+        <tr>
+            <td>Real 🥚🥚 Bailarines 🪩F.C</td>
+            <td class="total-multa">12.50€</td>
+        </tr>
+        <tr>
+            <td>Real Fermín C.F.</td>
+            <td class="total-multa">12.00€</td>
         </tr>
         <tr>
             <td>MORRITOS F.C.</td>
-            <td class="total-multa">7.50€</td>
+            <td class="total-multa">10.50€</td>
+        </tr>
+        <tr>
+            <td>CALAMARES CON TORRIJAS🦑🍞</td>
+            <td class="total-multa">9.50€</td>
         </tr></tbody>
     </table>
         </div>
@@ -593,6 +741,120 @@
         </tr></tbody>
     </table>
             </div>
+            <div id="primera-jornada-5" class="content-section" style="display:none;">
+                <h2>Multas Jornada 5 - 1ª División</h2>
+                
+    <table>
+        <thead>
+            <tr>
+                <th>Equipo</th>
+                <th>Multa Total</th>
+                <th>Desglose</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Fuentino Pérez</td>
+            <td class="total-multa">4.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>EL CHOLISMO FC</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Peor equipo de la jornada: 2.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Larios Limon FC</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Lim Hijo de Puta</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>2º Peor equipo de la jornada: 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Real 🥚🥚 Bailarines 🪩F.C</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>MORRITOS F.C.</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al capitán del rival: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>LA MARRANERA</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Capitán repetido con rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>PANAKOTA F.F.</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Capitán repetido con rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Real Pezqueñines FC</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Capitán repetido con rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>El Huracán CF</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Galácticos de la noche FC</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>3er Peor equipo de la jornada: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>QUE BARBARIDAD FC</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>CALAMARES CON TORRIJAS🦑🍞</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>CD Congelados</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>THE LIONS</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Poli Ejido CF</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Juaki la bomba</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Capitán repetido con rival: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>LOS POKÉMON 🐭🟡🐭</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>AL-CARRER F.C.</td>
+            <td class="total-multa">0.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Real Fermín C.F.</td>
+            <td class="total-multa">0.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li></ul></td>
+        </tr></tbody>
+    </table>
+            </div>
             <div id="primera-jornada-6" class="content-section" style="display:none;">
                 <h2>Multas Jornada 6 - 1ª División</h2>
                 
@@ -606,107 +868,277 @@
         </thead>
         <tbody>
         <tr>
-            <td>PANAKOTA F.F.</td>
-            <td class="total-multa">6.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>2º Peor equipo de la jornada: 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>El Huracán CF</td>
+            <td>LOS POKÉMON 🐭🟡🐭</td>
             <td class="total-multa">6.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Peor equipo de la jornada: 2.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>2º Peor equipo de la jornada: 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Larios Limon FC</td>
+            <td>Fuentino Pérez</td>
             <td class="total-multa">5.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>Lim Hijo de Puta</td>
+            <td class="total-multa">5.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>EL CHOLISMO FC</td>
             <td class="total-multa">5.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Peor equipo de la jornada: 2.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>AL-CARRER F.C.</td>
             <td class="total-multa">4.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Capitán repetido con rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>QUE BARBARIDAD FC</td>
             <td class="total-multa">4.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Capitán repetido con rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Poli Ejido CF</td>
+            <td class="total-multa">4.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>LA MARRANERA</td>
-            <td class="total-multa">4.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>EL CHOLISMO FC</td>
+            <td>Real Pezqueñines FC</td>
             <td class="total-multa">4.00€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>3er Peor equipo de la jornada: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Poli Ejido CF</td>
-            <td class="total-multa">4.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td>Galácticos de la noche FC</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Fuentino Pérez</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td>CD Congelados</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>CALAMARES CON TORRIJAS🦑🍞</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td>Real Fermín C.F.</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Juaki la bomba</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>THE LIONS</td>
             <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Real Fermín C.F.</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Juaki la bomba</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Real Pezqueñines FC</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>LOS POKÉMON 🐭🟡🐭</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>CD Congelados</td>
-            <td class="total-multa">2.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>MORRITOS F.C.</td>
             <td class="total-multa">2.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Galácticos de la noche FC</td>
+            <td>Larios Limon FC</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>CALAMARES CON TORRIJAS🦑🍞</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>PANAKOTA F.F.</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>El Huracán CF</td>
             <td class="total-multa">2.00€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>Real 🥚🥚 Bailarines 🪩F.C</td>
-            <td class="total-multa">2.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>LA MARRANERA</td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr></tbody>
     </table>
             </div>
+        <div id="segunda-clasificacion" class="content-section">
+            <h2>Clasificación - 2ª División</h2>
+            
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Equipo</th>
+                <th>Puntos (Jornada)</th>
+                <th>Puntos (General)</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center;">1</td>
+            <td>🇧🇷Samba Rovinha 🇧🇷</td>
+            <td style="text-align:center;">21</td>
+            <td style="text-align:center;">368</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">2</td>
+            <td>Jamon York F.C.</td>
+            <td style="text-align:center;">21</td>
+            <td style="text-align:center;">316</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">3</td>
+            <td>Lazaroneta</td>
+            <td style="text-align:center;">21</td>
+            <td style="text-align:center;">308</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">4</td>
+            <td>Morenetes de la Giralda 🍩</td>
+            <td style="text-align:center;">18</td>
+            <td style="text-align:center;">326</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">5</td>
+            <td>Real Pescados el Puerto Fc</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">279</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">6</td>
+            <td>SANTA LUCIA FC</td>
+            <td style="text-align:center;">15</td>
+            <td style="text-align:center;">273</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">7</td>
+            <td>SICARIOS CF</td>
+            <td style="text-align:center;">13</td>
+            <td style="text-align:center;">351</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">8</td>
+            <td>Kostas Mariotas</td>
+            <td style="text-align:center;">13</td>
+            <td style="text-align:center;">303</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">9</td>
+            <td>Osasuna N.S.R</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">328</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">10</td>
+            <td>BANANEROS FC</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">305</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">11</td>
+            <td>MTB Drink Team</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">275</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">12</td>
+            <td>Molinardo fc</td>
+            <td style="text-align:center;">12</td>
+            <td style="text-align:center;">195</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">13</td>
+            <td>parker f.c.</td>
+            <td style="text-align:center;">10</td>
+            <td style="text-align:center;">321</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">14</td>
+            <td>Tetitas Colesterol . F.C</td>
+            <td style="text-align:center;">10</td>
+            <td style="text-align:center;">306</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">15</td>
+            <td>Team pepino</td>
+            <td style="text-align:center;">10</td>
+            <td style="text-align:center;">289</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">16</td>
+            <td>Patejas</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">302</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">17</td>
+            <td>Pollos sin cabeza 🐥🧄</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">299</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">18</td>
+            <td>Charo la   Picanta FC</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">290</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">19</td>
+            <td>Banano Vallekano 🍌⚡</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">271</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">20</td>
+            <td>Todo por la camiseta 🇪🇸</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">258</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">21</td>
+            <td>Elche pero Peor</td>
+            <td style="text-align:center;">9</td>
+            <td style="text-align:center;">253</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">22</td>
+            <td>ElBarto F.C</td>
+            <td style="text-align:center;">7</td>
+            <td style="text-align:center;">280</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">23</td>
+            <td>Minabo De Kiev</td>
+            <td style="text-align:center;">6</td>
+            <td style="text-align:center;">230</td>
+        </tr>
+        <tr>
+            <td style="text-align:center;">24</td>
+            <td>Motobetis a primera!</td>
+            <td style="text-align:center;">3</td>
+            <td style="text-align:center;">260</td>
+        </tr></tbody>
+    </table>
+        </div>
+        <div id="segunda-capitanes" class="content-section">
+            <h2>Historial de Capitanes - 2ª División</h2>
+            
+    <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>Jornada</th><th>BANANEROS FC</th><th>Banano Vallekano 🍌⚡</th><th>Charo la   Picanta FC</th><th>ElBarto F.C</th><th>Elche pero Peor</th><th>Jamon York F.C.</th><th>Kostas Mariotas</th><th>Lazaroneta</th><th>MTB Drink Team</th><th>Minabo De Kiev</th><th>Molinardo fc</th><th>Morenetes de la Giralda 🍩</th><th>Motobetis a primera!</th><th>Osasuna N.S.R</th><th>Patejas</th><th>Pollos sin cabeza 🐥🧄</th><th>Real Pescados el Puerto Fc</th><th>SANTA LUCIA FC</th><th>SICARIOS CF</th><th>Team pepino</th><th>Tetitas Colesterol . F.C</th><th>Todo por la camiseta 🇪🇸</th><th>parker f.c.</th><th>🇧🇷Samba Rovinha 🇧🇷</th></tr></thead>
+            <tbody><tr><td><strong>Jornada 1</strong></td><td>Raba</td><td>Berenguer</td><td>Nicolás Pépé</td><td>Berenguer</td><td>Isi Palazón</td><td>Ferrán Torres </td><td>Iñaki Williams</td><td>Nicolás Pépé</td><td>Güler</td><td>Gonzalo</td><td>N/A</td><td>Mbappé</td><td>Mariano</td><td>Güler</td><td>Guedes</td><td>Bryan Zaragoza </td><td>Güler</td><td>Güler</td><td>Mbappé</td><td>N/A</td><td>Gerard Moreno</td><td>Güler</td><td>Nicolás Pépé</td><td>Mbappé</td></tr><tr><td><strong>Jornada 2</strong></td><td>Brais Méndez</td><td>Sorloth</td><td>Ferrán Torres </td><td>Sorloth</td><td>Isi Palazón</td><td>Sorloth</td><td>Julián Álvarez</td><td>Güler</td><td>Oyarzabal</td><td>Robert Navarro</td><td>N/A</td><td>Almada</td><td>Lamine Yamal</td><td>Almada</td><td>Sorloth</td><td>Kubo</td><td>Eyong</td><td>Lo Celso</td><td>Ferrán Torres </td><td>Stuani</td><td>Brais Méndez</td><td>Cardoso</td><td>Güler</td><td>Mbappé</td></tr><tr><td><strong>Jornada 3</strong></td><td>Rodri Mendoza</td><td>Güler</td><td>Oyarzabal</td><td>Ferrán Torres </td><td>Pere Milla</td><td>Güler</td><td>Güler</td><td>Jorge De Frutos</td><td>Álvaro Rodríguez</td><td>Rodrygo</td><td>N/A</td><td>Pablo Durán</td><td>Julián Álvarez</td><td>Lo Celso</td><td>Buchanan</td><td>Nico Williams</td><td>Fede Valverde</td><td>Giuliano Simeone</td><td>Ferrán Torres </td><td>Ferrán Torres </td><td>Güler</td><td>Brais Méndez</td><td>Barrenetxea</td><td>Eyong</td></tr><tr><td><strong>Jornada 4</strong></td><td>Alfon</td><td>Lo Celso</td><td>Antony</td><td>Sancet</td><td>Güler</td><td>Sancet</td><td>Puado</td><td>Sancet</td><td>Víctor Muñoz</td><td>Rodrygo</td><td>Jorge De Frutos</td><td>André Silva</td><td>Alfon</td><td>Sancet</td><td>Luis Milla</td><td>Ferrán Torres </td><td>Sancet</td><td>Sancet</td><td class="repeated-captain">Ferrán Torres </td><td>Morales</td><td>Sancet</td><td>Alfon</td><td>Antony</td><td>Borja Iglesias</td></tr><tr><td><strong>Jornada 5</strong></td><td>Mbappé</td><td>Raphinha</td><td>Rafa Mir</td><td>Antony</td><td>Güler</td><td>Antony</td><td>Rafa Mir</td><td>Rafa Mir</td><td>Mikautadze</td><td>Mikautadze</td><td>Germán Valera</td><td>André Silva</td><td>Eyong</td><td>Eyong</td><td>Antony</td><td>Ferrán Torres </td><td>Vanat</td><td>Rafa Mir</td><td>Jorge De Frutos</td><td>Ferrán Torres </td><td>Rafa Mir</td><td>Nicolas Pépé</td><td>Jorge De Frutos</td><td>Eyong</td></tr><tr><td><strong>Jornada 6</strong></td><td>Riquelme</td><td>Lo Celso</td><td>Ferrán Torres </td><td>Güler</td><td>Iván Romero</td><td>Güler</td><td>Budimir</td><td>Güler</td><td>Oyarzabal</td><td>N/A</td><td>N/A</td><td>Pablo Durán</td><td>Julián Álvarez</td><td>Güler</td><td>Buchanan</td><td>Nico Williams</td><td>Eyong</td><td>Giuliano Simeone</td><td>Mbappé</td><td>N/A</td><td>N/A</td><td>N/A</td><td>Liso</td><td>Swedberg</td></tr></tbody>
+        </table>
+    </div>
+    
+        </div>
         <div id="segunda-totales" class="content-section">
             <h2>Multas Totales - 2ª División</h2>
             
@@ -720,99 +1152,99 @@
         <tbody>
         <tr>
             <td>SANTA LUCIA FC</td>
-            <td class="total-multa">15.00€</td>
+            <td class="total-multa">19.50€</td>
+        </tr>
+        <tr>
+            <td>Minabo De Kiev</td>
+            <td class="total-multa">16.50€</td>
         </tr>
         <tr>
             <td>Patejas</td>
             <td class="total-multa">15.00€</td>
         </tr>
         <tr>
-            <td>Lazaroneta</td>
-            <td class="total-multa">13.50€</td>
+            <td>Real Pescados el Puerto Fc</td>
+            <td class="total-multa">14.00€</td>
         </tr>
         <tr>
-            <td>Jamon York F.C.</td>
+            <td>Lazaroneta</td>
             <td class="total-multa">13.00€</td>
         </tr>
         <tr>
-            <td>Motobetis a primera!</td>
+            <td>Tetitas Colesterol . F.C</td>
             <td class="total-multa">12.00€</td>
         </tr>
         <tr>
-            <td>Real Pescados el Puerto Fc</td>
-            <td class="total-multa">11.50€</td>
+            <td>Charo la   Picanta FC</td>
+            <td class="total-multa">11.00€</td>
         </tr>
         <tr>
-            <td>Minabo De Kiev</td>
-            <td class="total-multa">11.50€</td>
+            <td>ElBarto F.C</td>
+            <td class="total-multa">11.00€</td>
         </tr>
         <tr>
-            <td>Charo la  Picanta FC</td>
-            <td class="total-multa">10.50€</td>
-        </tr>
-        <tr>
-            <td>Tetitas Colesterol . F.C</td>
-            <td class="total-multa">10.00€</td>
-        </tr>
-        <tr>
-            <td>Todo por la camiseta 🇪🇸</td>
-            <td class="total-multa">10.00€</td>
-        </tr>
-        <tr>
-            <td>MTB Drink Team</td>
-            <td class="total-multa">8.50€</td>
-        </tr>
-        <tr>
-            <td>Elche pero Peor</td>
-            <td class="total-multa">8.00€</td>
-        </tr>
-        <tr>
-            <td>Team pepino</td>
-            <td class="total-multa">7.50€</td>
+            <td>Jamon York F.C.</td>
+            <td class="total-multa">11.00€</td>
         </tr>
         <tr>
             <td>parker f.c.</td>
-            <td class="total-multa">7.50€</td>
+            <td class="total-multa">10.50€</td>
+        </tr>
+        <tr>
+            <td>Motobetis a primera!</td>
+            <td class="total-multa">10.50€</td>
+        </tr>
+        <tr>
+            <td>Osasuna N.S.R</td>
+            <td class="total-multa">8.50€</td>
+        </tr>
+        <tr>
+            <td>Team pepino</td>
+            <td class="total-multa">8.50€</td>
+        </tr>
+        <tr>
+            <td>Banano Vallekano 🍌⚡</td>
+            <td class="total-multa">8.50€</td>
+        </tr>
+        <tr>
+            <td>Todo por la camiseta 🇪🇸</td>
+            <td class="total-multa">8.50€</td>
+        </tr>
+        <tr>
+            <td>Molinardo fc</td>
+            <td class="total-multa">8.00€</td>
         </tr>
         <tr>
             <td>BANANEROS FC</td>
             <td class="total-multa">7.50€</td>
         </tr>
         <tr>
-            <td>Pollos sin cabeza 🐥🧄</td>
-            <td class="total-multa">7.00€</td>
+            <td>Elche pero Peor</td>
+            <td class="total-multa">7.50€</td>
         </tr>
         <tr>
-            <td>ElBarto F.C</td>
-            <td class="total-multa">7.00€</td>
+            <td>MTB Drink Team</td>
+            <td class="total-multa">7.50€</td>
         </tr>
         <tr>
             <td>Kostas Mariotas</td>
-            <td class="total-multa">6.50€</td>
-        </tr>
-        <tr>
-            <td>Osasuna N.S.R</td>
-            <td class="total-multa">6.00€</td>
-        </tr>
-        <tr>
-            <td>SICARIOS CF</td>
-            <td class="total-multa">6.00€</td>
-        </tr>
-        <tr>
-            <td>Banano Vallekano 🍌⚡</td>
-            <td class="total-multa">5.50€</td>
+            <td class="total-multa">7.00€</td>
         </tr>
         <tr>
             <td>🇧🇷Samba Rovinha 🇧🇷</td>
-            <td class="total-multa">5.00€</td>
+            <td class="total-multa">6.50€</td>
         </tr>
         <tr>
-            <td>Molinardo fc</td>
-            <td class="total-multa">5.00€</td>
+            <td>SICARIOS CF</td>
+            <td class="total-multa">6.50€</td>
+        </tr>
+        <tr>
+            <td>Pollos sin cabeza 🐥🧄</td>
+            <td class="total-multa">6.00€</td>
         </tr>
         <tr>
             <td>Morenetes de la Giralda 🍩</td>
-            <td class="total-multa">2.50€</td>
+            <td class="total-multa">3.50€</td>
         </tr></tbody>
     </table>
         </div>
@@ -849,7 +1281,7 @@
             <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al capitán del rival: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Charo la  Picanta FC</td>
+            <td>Charo la   Picanta FC</td>
             <td class="total-multa">2.00€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li></ul></td>
         </tr>
@@ -1018,7 +1450,7 @@
             <td class="desglose"><ul><li>3er Peor equipo de la jornada: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Charo la  Picanta FC</td>
+            <td>Charo la   Picanta FC</td>
             <td class="total-multa">0.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li></ul></td>
         </tr>
@@ -1082,7 +1514,7 @@
             <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al capitán del rival: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Charo la  Picanta FC</td>
+            <td>Charo la   Picanta FC</td>
             <td class="total-multa">2.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (5): 2.50€</li></ul></td>
         </tr>
@@ -1256,7 +1688,7 @@
             <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Charo la  Picanta FC</td>
+            <td>Charo la   Picanta FC</td>
             <td class="total-multa">1.00€</td>
             <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
@@ -1302,6 +1734,115 @@
         </tr></tbody>
     </table>
             </div>
+            <div id="segunda-jornada-5" class="content-section" style="display:none;">
+                <h2>Multas Jornada 5 - 2ª División</h2>
+                
+    <table>
+        <thead>
+            <tr>
+                <th>Equipo</th>
+                <th>Multa Total</th>
+                <th>Desglose</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>parker f.c.</td>
+            <td class="total-multa">4.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>ElBarto F.C</td>
+            <td class="total-multa">3.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>2º Peor equipo de la jornada: 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Patejas</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (4): 2.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>SANTA LUCIA FC</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>3er Peor equipo de la jornada: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Charo la   Picanta FC</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Banano Vallekano 🍌⚡</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Minabo De Kiev</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Peor equipo de la jornada: 2.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Real Pescados el Puerto Fc</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Tetitas Colesterol . F.C</td>
+            <td class="total-multa">1.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>🇧🇷Samba Rovinha 🇧🇷</td>
+            <td class="total-multa">1.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Jamon York F.C.</td>
+            <td class="total-multa">1.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Todo por la camiseta 🇪🇸</td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Molinardo fc</td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Elche pero Peor</td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Motobetis a primera!</td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>MTB Drink Team</td>
+            <td class="total-multa">1.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Kostas Mariotas</td>
+            <td class="total-multa">0.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li></ul></td>
+        </tr>
+        <tr>
+            <td>BANANEROS FC</td>
+            <td class="total-multa">0.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Morenetes de la Giralda 🍩</td>
+            <td class="total-multa">0.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li></ul></td>
+        </tr></tbody>
+    </table>
+            </div>
             <div id="segunda-jornada-6" class="content-section" style="display:none;">
                 <h2>Multas Jornada 6 - 2ª División</h2>
                 
@@ -1315,54 +1856,29 @@
         </thead>
         <tbody>
         <tr>
-            <td>Jamon York F.C.</td>
-            <td class="total-multa">6.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (6): 3.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td>SANTA LUCIA FC</td>
+            <td class="total-multa">5.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>2º Peor equipo de la jornada: 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Patejas</td>
-            <td class="total-multa">6.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (6): 3.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Motobetis a primera!</td>
-            <td class="total-multa">5.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>2º Peor equipo de la jornada: 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Charo la  Picanta FC</td>
+            <td>Osasuna N.S.R</td>
             <td class="total-multa">4.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Todo por la camiseta 🇪🇸</td>
+            <td>Molinardo fc</td>
             <td class="total-multa">4.00€</td>
-            <td class="desglose"><ul><li>Peor equipo de la jornada: 2.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>3er Peor equipo de la jornada: 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Elche pero Peor</td>
-            <td class="total-multa">4.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>3er Peor equipo de la jornada: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>MTB Drink Team</td>
-            <td class="total-multa">4.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>SANTA LUCIA FC</td>
+            <td>Real Pescados el Puerto Fc</td>
             <td class="total-multa">3.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Pollos sin cabeza 🐥🧄</td>
+            <td>Minabo De Kiev</td>
             <td class="total-multa">3.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al capitán del rival: 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Lazaroneta</td>
-            <td class="total-multa">3.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (3): 1.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Peor equipo de la jornada: 2.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>Kostas Mariotas</td>
@@ -1370,24 +1886,59 @@
             <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Real Pescados el Puerto Fc</td>
-            <td class="total-multa">3.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>parker f.c.</td>
+            <td>Lazaroneta</td>
             <td class="total-multa">3.00€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>ElBarto F.C</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Patejas</td>
+            <td class="total-multa">3.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Pollos sin cabeza 🐥🧄</td>
             <td class="total-multa">2.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Osasuna N.S.R</td>
+            <td>Charo la   Picanta FC</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>SICARIOS CF</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Jamon York F.C.</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Elche pero Peor</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Motobetis a primera!</td>
+            <td class="total-multa">2.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Tetitas Colesterol . F.C</td>
             <td class="total-multa">2.00€</td>
-            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Team pepino</td>
+            <td class="total-multa">2.00€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>🇧🇷Samba Rovinha 🇧🇷</td>
@@ -1395,42 +1946,32 @@
             <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>SICARIOS CF</td>
+            <td>parker f.c.</td>
             <td class="total-multa">2.00€</td>
             <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Molinardo fc</td>
+            <td>MTB Drink Team</td>
             <td class="total-multa">2.00€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (2): 1.00€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li><li>Elegir al peor capitán: 1.00€</li></ul></td>
         </tr>
         <tr>
-            <td>Tetitas Colesterol . F.C</td>
+            <td>Banano Vallekano 🍌⚡</td>
+            <td class="total-multa">1.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Todo por la camiseta 🇪🇸</td>
+            <td class="total-multa">1.50€</td>
+            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
+        </tr>
+        <tr>
+            <td>Morenetes de la Giralda 🍩</td>
             <td class="total-multa">1.50€</td>
             <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr>
         <tr>
             <td>BANANEROS FC</td>
-            <td class="total-multa">1.50€</td>
-            <td class="desglose"><ul><li>Jugadores repetidos (1): 0.50€</li><li>Alinear al peor jugador: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Team pepino</td>
-            <td class="total-multa">1.00€</td>
-            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Banano Vallekano 🍌⚡</td>
-            <td class="total-multa">1.00€</td>
-            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Minabo De Kiev</td>
-            <td class="total-multa">1.00€</td>
-            <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
-        </tr>
-        <tr>
-            <td>Morenetes de la Giralda 🍩</td>
             <td class="total-multa">1.00€</td>
             <td class="desglose"><ul><li>Alinear al peor jugador: 1.00€</li></ul></td>
         </tr></tbody>
@@ -1470,7 +2011,7 @@
                     if (activeLink) {
                         activeLink.classList.add('active');
                     }
-                    if (window.innerWidth <= 850) {
+                    if (window.innerWidth <= 950) {
                         closeMenu();
                     }
                 }
@@ -1495,9 +2036,12 @@
                     }
                 });
 
-                showContent('primera-totales');
-                const firstNavLink = document.querySelector('.nav-link');
-                if(firstNavLink) firstNavLink.classList.add('active');
+                const firstSectionId = document.querySelector('.content-section')?.id;
+                if (firstSectionId) {
+                   showContent(firstSectionId);
+                   const firstNavLink = document.querySelector(`.nav-link[data-target='${firstSectionId}']`);
+                   if(firstNavLink) firstNavLink.classList.add('active');
+                }
             });
         </script>
     </body>

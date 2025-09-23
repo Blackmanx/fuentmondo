@@ -53,8 +53,7 @@ def choose_save_option():
     btn_local = tk.Button(button_frame, text="Actualizar Excel Localmente", command=lambda: select_option('local'), height=2, width=25)
     btn_local.pack(side=tk.LEFT, padx=5)
 
-    # --- [NUEVO BOTÓN] ---
-    btn_multas = tk.Button(button_frame, text="Generar Solo Multas (HTML)", command=lambda: select_option('multas_only'), height=2, width=25, bg="#28a745", fg="white")
+    btn_multas = tk.Button(button_frame, text="Generar Solo Informe (HTML)", command=lambda: select_option('multas_only'), height=2, width=25, bg="#28a745", fg="white")
     btn_multas.pack(side=tk.LEFT, padx=5)
 
     root.mainloop()
@@ -193,29 +192,6 @@ def guardar_respuesta(datos, nombre_archivo):
     except Exception as e:
         print(f"Error al guardar el archivo '{nombre_archivo}': {e}")
 
-# Obtiene y muestra la alineación y el capitán de un equipo específico para una ronda.
-def obtener_y_mostrar_alineacion(payload_base, team_id, round_id, team_name):
-    print(f"\n--- OBTENIENDO ALINEACIÓN PARA: {team_name} ---")
-    API_URL_LINEUP = "https://api.futmondo.com/1/userteam/roundlineup"
-    payload_lineup = copy.deepcopy(payload_base)
-    payload_lineup['query'].update({'round': round_id, 'userteamId': team_id})
-    datos_lineup = llamar_api(API_URL_LINEUP, payload_lineup)
-    if datos_lineup and 'answer' in datos_lineup and 'players' in datos_lineup['answer']:
-        lineup_players = datos_lineup['answer']['players']
-        capitan = "No asignado"
-        print(f"Jugadores de {team_name}:")
-        for player in lineup_players:
-            es_capitan = ""
-            if player.get('cpt'):
-                capitan = player['name']
-                es_capitan = " (Capitán)"
-            print(f"- {player['name']}{es_capitan}")
-        print(f"\nCapitán seleccionado: {capitan}")
-    else:
-        print(f"No se pudo obtener la alineación para {team_name}.")
-        if datos_lineup:
-            print("Respuesta de la API:", datos_lineup)
-
 # Obtiene una lista de los capitanes de todos los equipos para una ronda específica.
 def get_captains_for_round(payload_base, datos_ronda, name_map={}):
     API_URL_LINEUP = "https://api.futmondo.com/1/userteam/roundlineup"
@@ -242,7 +218,8 @@ def get_captains_for_round(payload_base, datos_ronda, name_map={}):
             team_captains.append({"team_name": canonical_name, "capitan": capitan})
     return team_captains
 
-# Procesa la respuesta de la API de rondas, manejando casos especiales como la jornada 1.5.
+### MODIFICADA ###
+# Procesa la respuesta de la API de rondas, convirtiendo los números de ronda a enteros.
 def procesar_rondas_api(rounds_list):
     if not rounds_list:
         return {}
@@ -252,10 +229,8 @@ def procesar_rondas_api(rounds_list):
         round_id = r.get('id')
         if not round_num or not round_id:
             continue
-        if round_num == 1.5:
-            rounds_map[6] = round_id
-            print("Jornada especial 1.5 mapeada como Jornada 6.")
-        elif round_num % 1 == 0:
+        # Se elimina la lógica de 1.5, ahora todas las jornadas son enteras
+        if round_num % 1 == 0:
             rounds_map[int(round_num)] = round_id
     return rounds_map
 
@@ -320,6 +295,8 @@ def calcular_multas_jornada(
         total = sum(d.get('multa', 0.0) for d in data['desglose'].values())
         multas_finales[team_name]['multa_total'] = round(total, 2)
     return multas_finales
+
+# --- Funciones de Generación de HTML ---
 
 # Genera el contenido HTML para una única tabla de multas de jornada.
 def _generar_tabla_multas_jornada_html(multas_data):
@@ -392,6 +369,68 @@ def _generar_tabla_multas_totales_html(multas_acumuladas):
         <tbody>{table_rows}</tbody>
     </table>"""
 
+### NUEVA ###
+# Genera el contenido HTML para la tabla de clasificación.
+def _generar_tabla_clasificacion_html(ranking_ordenado):
+    table_rows = ""
+    for i, equipo in enumerate(ranking_ordenado):
+        table_rows += f"""
+        <tr>
+            <td style="text-align:center;">{i + 1}</td>
+            <td>{equipo['name']}</td>
+            <td style="text-align:center;">{equipo['points']}</td>
+            <td style="text-align:center;">{equipo['general_points']}</td>
+        </tr>"""
+    return f"""
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Equipo</th>
+                <th>Puntos (Jornada)</th>
+                <th>Puntos (General)</th>
+            </tr>
+        </thead>
+        <tbody>{table_rows}</tbody>
+    </table>"""
+
+### NUEVA ###
+# Genera el contenido HTML para la tabla de historial de capitanes.
+def _generar_tabla_capitanes_html(datos_capitanes, team_names):
+    if not datos_capitanes:
+        return "<p>No hay datos de capitanes disponibles.</p>"
+
+    sorted_jornadas = sorted(datos_capitanes.keys())
+    sorted_teams = sorted(list(team_names))
+
+    header_cols = "".join(f"<th>{team}</th>" for team in sorted_teams)
+    header = f"<tr><th>Jornada</th>{header_cols}</tr>"
+
+    body_rows = ""
+    for jornada_num in sorted_jornadas:
+        capitanes_jornada = {item['team_name']: item for item in datos_capitanes[jornada_num]}
+        row_cols = f"<td><strong>Jornada {jornada_num}</strong></td>"
+        for team_name in sorted_teams:
+            cap_info = capitanes_jornada.get(team_name)
+            if cap_info:
+                capitan_name = cap_info.get('capitan', 'N/A')
+                is_repeated = cap_info.get('is_repeated_3_times', False)
+                class_attr = ' class="repeated-captain"' if is_repeated else ''
+                row_cols += f'<td{class_attr}>{capitan_name}</td>'
+            else:
+                row_cols += '<td>-</td>'
+        body_rows += f"<tr>{row_cols}</tr>"
+
+    return f"""
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>{header}</thead>
+            <tbody>{body_rows}</tbody>
+        </table>
+    </div>
+    """
+
+### MODIFICADA ###
 # Genera la página HTML completa con todos los datos y la navegación.
 def generar_pagina_html_completa(datos_informe, output_path):
     contenido_html = ""
@@ -399,16 +438,39 @@ def generar_pagina_html_completa(datos_informe, output_path):
 
     for div_key, div_data in datos_informe.items():
         div_titulo = "1ª División" if div_key == "primera" else "2ª División"
+
+        # Enlaces de Navegación
+        id_clasificacion = f"{div_key}-clasificacion"
         id_totales = f"{div_key}-totales"
+        id_capitanes = f"{div_key}-capitanes"
+        nav_links_html += f'<a href="#" class="nav-link" data-target="{id_clasificacion}">Clasificación {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link" data-target="{id_capitanes}">Capitanes {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link" data-target="{id_totales}">Multas Totales {div_titulo}</a>'
+
+        # Contenido HTML - Clasificación
+        contenido_html += f"""
+        <div id="{id_clasificacion}" class="content-section">
+            <h2>Clasificación - {div_titulo}</h2>
+            {_generar_tabla_clasificacion_html(div_data['clasificacion'])}
+        </div>"""
+
+        # Contenido HTML - Capitanes
+        contenido_html += f"""
+        <div id="{id_capitanes}" class="content-section">
+            <h2>Historial de Capitanes - {div_titulo}</h2>
+            {_generar_tabla_capitanes_html(div_data['capitanes'], div_data['totales'].keys())}
+        </div>"""
+
+        # Contenido HTML - Multas Totales
         contenido_html += f"""
         <div id="{id_totales}" class="content-section">
             <h2>Multas Totales - {div_titulo}</h2>
             {_generar_tabla_multas_totales_html(div_data['totales'])}
         </div>"""
-        nav_links_html += f'<a href="#" class="nav-link" data-target="{id_totales}">Totales {div_titulo}</a>'
 
+        # Desplegable y contenido de Multas por Jornada
         nav_links_html += '<div class="dropdown">'
-        nav_links_html += f'<button class="dropbtn">Jornadas {div_titulo} &#9662;</button>'
+        nav_links_html += f'<button class="dropbtn">Multas Jornada ({div_titulo}) &#9662;</button>'
         nav_links_html += '<div class="dropdown-content">'
         for jornada_data in sorted(div_data['jornadas'], key=lambda x: x['numero']):
             jornada_num = jornada_data['numero']
@@ -428,15 +490,16 @@ def generar_pagina_html_completa(datos_informe, output_path):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Informe de Multas - SuperLiga Fuentmondo</title>
+        <title>Informe - SuperLiga Fuentmondo</title>
         <style>
             :root {{
                 --primary-bg: #2c3e50; --secondary-bg: #34495e; --accent-color: #3498db;
                 --text-light: #ecf0f1; --text-dark: #333; --border-color: #ddd;
                 --body-bg: #f4f7f6; --white: #fff; --shadow: rgba(0,0,0,0.1);
+                --warning-bg: #f1c40f;
             }}
             body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: var(--body-bg); color: var(--text-dark); }}
-            .container {{ max-width: 1100px; margin: 20px auto; padding: 20px; background: var(--white); box-shadow: 0 0 15px var(--shadow); border-radius: 8px; }}
+            .container {{ max-width: 1200px; margin: 20px auto; padding: 20px; background: var(--white); box-shadow: 0 0 15px var(--shadow); border-radius: 8px; }}
             .header {{ display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background-color: var(--primary-bg); color: var(--text-light); position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 1001; }}
             .header h1 {{ margin: 0; font-size: 1.5em; }}
             .hamburger {{ display: none; font-size: 24px; background: none; border: none; color: var(--text-light); cursor: pointer; }}
@@ -445,7 +508,7 @@ def generar_pagina_html_completa(datos_informe, output_path):
             .navbar a:hover, .dropdown:hover .dropbtn {{ background-color: var(--secondary-bg); }}
             .navbar a.active {{ background-color: var(--accent-color); font-weight: bold; }}
             .dropdown {{ position: relative; display: inline-block; }}
-            .dropdown-content {{ display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0 8px 16px var(--shadow); z-index: 1; border-radius: 4px; overflow: hidden; }}
+            .dropdown-content {{ display: none; position: absolute; background-color: #f9f9f9; min-width: 160px; box-shadow: 0 8px 16px var(--shadow); z-index: 1; border-radius: 4px; overflow: hidden; max-height: 400px; overflow-y: auto; }}
             .dropdown-content a {{ color: var(--text-dark); padding: 12px 16px; display: block; text-align: left; }}
             .dropdown-content a:hover {{ background-color: #f1f1f1; }}
             .dropdown-content.show {{ display: block; }}
@@ -453,13 +516,14 @@ def generar_pagina_html_completa(datos_informe, output_path):
             main {{ padding-top: 80px; }}
             h2 {{ text-align: center; color: var(--primary-bg); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-top: 0; }}
             table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ padding: 12px 15px; border: 1px solid var(--border-color); text-align: left; }}
+            th, td {{ padding: 12px 15px; border: 1px solid var(--border-color); text-align: left; white-space: nowrap; }}
             th {{ background-color: var(--accent-color); color: var(--white); }}
             tr:nth-child(even) {{ background-color: #f2f2f2; }}
             .total-multa {{ font-weight: bold; text-align: center; color: #c0392b; }}
             .desglose ul {{ margin: 0; padding-left: 20px; }}
             .desglose li {{ margin-bottom: 5px; }}
-            @media screen and (max-width: 850px) {{
+            .repeated-captain {{ background-color: var(--warning-bg); font-weight: bold; color: var(--text-dark); }}
+            @media screen and (max-width: 950px) {{
                 .header h1 {{ font-size: 1.2em; }}
                 .hamburger {{ display: block; }}
                 .navbar {{ position: fixed; top: 0; left: 0; height: 100%; width: 280px; background-color: var(--primary-bg); flex-direction: column; align-items: flex-start; padding-top: 60px; transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 1000; }}
@@ -477,7 +541,7 @@ def generar_pagina_html_completa(datos_informe, output_path):
     <body>
         <div class="overlay"></div>
         <header class="header">
-            <h1>Informe de Multas</h1>
+            <h1>Informe SuperLiga</h1>
             <button class="hamburger" aria-label="Abrir menú">☰</button>
             <nav class="navbar">{nav_links_html}</nav>
         </header>
@@ -517,7 +581,7 @@ def generar_pagina_html_completa(datos_informe, output_path):
                     if (activeLink) {{
                         activeLink.classList.add('active');
                     }}
-                    if (window.innerWidth <= 850) {{
+                    if (window.innerWidth <= 950) {{
                         closeMenu();
                     }}
                 }}
@@ -542,9 +606,12 @@ def generar_pagina_html_completa(datos_informe, output_path):
                     }}
                 }});
 
-                showContent('{list(datos_informe.keys())[0]}-totales');
-                const firstNavLink = document.querySelector('.nav-link');
-                if(firstNavLink) firstNavLink.classList.add('active');
+                const firstSectionId = document.querySelector('.content-section')?.id;
+                if (firstSectionId) {{
+                   showContent(firstSectionId);
+                   const firstNavLink = document.querySelector(`.nav-link[data-target='${{firstSectionId}}']`);
+                   if(firstNavLink) firstNavLink.classList.add('active');
+                }}
             }});
         </script>
     </body>
@@ -557,25 +624,34 @@ def generar_pagina_html_completa(datos_informe, output_path):
     except Exception as e:
         print(f"Error al guardar el archivo HTML final: {e}")
 
-# --- Funciones de Excel (sin cambios) ---
-def actualizar_hoja_excel(workbook, datos_general, datos_teams, sheet_name, fila_inicio, columna_inicio, name_map={}):
+# --- Funciones de Excel ---
+
+### NUEVA ###
+# Procesa y ordena los datos de clasificación de la API.
+def _procesar_y_ordenar_clasificacion(datos_general, datos_teams, name_map={}):
+    puntos_generales_dict = {name_map.get(e['teamname'], e['teamname']): e['points'] for e in datos_teams['answer']['teams']}
+    ranking_general_list = datos_general['answer']['ranking']
+    equipos_para_ordenar = []
+    for equipo in ranking_general_list:
+        nombre_equipo_api = equipo['name']
+        nombre_equipo_canonico = name_map.get(nombre_equipo_api, nombre_equipo_api)
+        equipos_para_ordenar.append({
+            'name': nombre_equipo_canonico,
+            'points': equipo['points'],
+            'general_points': puntos_generales_dict.get(nombre_equipo_canonico, 0)
+        })
+    return sorted(equipos_para_ordenar, key=lambda x: (x['points'], x['general_points']), reverse=True)
+
+### MODIFICADA ###
+# Actualiza una hoja de Excel con los datos de clasificación.
+def actualizar_hoja_excel(workbook, ranking_ordenado, sheet_name, fila_inicio, columna_inicio):
     try:
         sheet = workbook[sheet_name]
-        puntos_generales_dict = {name_map.get(e['teamname'], e['teamname']): e['points'] for e in datos_teams['answer']['teams']}
-        ranking_general_list = datos_general['answer']['ranking']
-        equipos_para_ordenar = []
-        for equipo in ranking_general_list:
-            nombre_equipo_api = equipo['name']
-            nombre_equipo_canonico = name_map.get(nombre_equipo_api, nombre_equipo_api)
-            equipos_para_ordenar.append({
-                'name': nombre_equipo_canonico,
-                'points': equipo['points'],
-                'general_points': puntos_generales_dict.get(nombre_equipo_canonico, 0)
-            })
-        ranking_ordenado = sorted(equipos_para_ordenar, key=lambda x: (x['points'], x['general_points']), reverse=True)
+        # Limpiar área de datos anterior
         for row in sheet.iter_rows(min_row=fila_inicio, max_row=sheet.max_row, min_col=columna_inicio, max_col=columna_inicio + 2):
             for cell in row:
                 cell.value = None
+        # Escribir nuevos datos
         for i, equipo in enumerate(ranking_ordenado):
             fila_actual = fila_inicio + i
             sheet.cell(row=fila_actual, column=columna_inicio).value = equipo['name']
@@ -625,7 +701,7 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
                         col_to_update = team_to_captain_col[team_name]
                         sheet.cell(row=row_idx, column=col_to_update).value = captain
                     else:
-                        print(f"  -> Aviso: El equipo '{team_name}' no se encontró en la cabecera de la hoja 'Capitanes'.")
+                        print(f"   -> Aviso: El equipo '{team_name}' no se encontró en la cabecera de la hoja 'Capitanes'.")
                 print(f"Capitanes de la '{target_row_label}' actualizados en memoria.")
                 row_found = True
                 break
@@ -635,21 +711,21 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
         print(f"Error actualizando la hoja 'Capitanes' para la jornada {round_number}: {e}")
 
 def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_name, name_map={}):
-    print(f"\n--- INICIANDO ACTUALIZACIÓN HISTÓRICA DE CAPITANES PARA {division_name.upper()} ---")
+    print(f"\n--- INICIANDO ACTUALIZACIÓN HISTÓRICA DE CAPITANES PARA {division_name.upper()} (EXCEL) ---")
     sorted_round_numbers = sorted(rounds_map.keys())
     for round_number in sorted_round_numbers:
         round_id = rounds_map[round_number]
-        print(f"Procesando capitanes de la Jornada {round_number}...")
+        print(f"Procesando capitanes de la Jornada {round_number} para Excel...")
         payload_round = copy.deepcopy(payload_base)
         payload_round['query'].update({'roundNumber': round_id, 'championshipId': payload_base['query']['championshipId']})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
         if not datos_ronda or 'answer' not in datos_ronda or datos_ronda['answer'] == 'api.error.general':
-            print(f"  -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+            print(f"   -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
             continue
         datos_ronda['query']['roundNumber'] = round_id
         team_captains = get_captains_for_round(payload_base, datos_ronda, name_map)
         if not team_captains:
-            print(f"  -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
+            print(f"   -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
             continue
         actualizar_hoja_capitanes(workbook, round_number, team_captains)
 
@@ -659,7 +735,7 @@ def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_
 def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={}):
     if not datos_ronda or 'answer' not in datos_ronda or 'matches' not in datos_ronda['answer']:
         print("Error: Respuesta de API de ronda inválida.")
-        return None, None
+        return None
     teams_in_round_list = datos_ronda['answer'].get('ranking', [])
     matches = datos_ronda['answer']['matches']
     round_id_actual = datos_ronda['query']['roundId']
@@ -758,6 +834,42 @@ def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str
             print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
     return datos_jornadas, dict(multas_acumuladas)
 
+### NUEVA ###
+# Recopila el historial de capitanes y detecta la tercera repetición.
+def recopilar_historico_capitanes(rounds_map, payload_base, name_map, division_str):
+    print(f"\n--- RECOPILANDO HISTORIAL DE CAPITANES PARA {division_str.upper()} ---")
+    capitanes_por_jornada = {}
+    contador_capitanes = defaultdict(lambda: defaultdict(int))
+    sorted_rounds = sorted(rounds_map.keys())
+
+    for round_number in sorted_rounds:
+        round_id = rounds_map[round_number]
+        print(f"Obteniendo capitanes de la Jornada {round_number}...")
+        payload_round = copy.deepcopy(payload_base)
+        payload_round['query'].update({'roundNumber': round_id})
+        datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
+
+        if not datos_ronda or 'answer' not in datos_ronda:
+            print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+            continue
+
+        datos_ronda['query']['roundNumber'] = round_id
+        team_captains = get_captains_for_round(payload_base, datos_ronda, name_map)
+
+        jornada_data = []
+        for cap_info in team_captains:
+            team_name = cap_info['team_name']
+            capitan = cap_info['capitan']
+            if capitan != "N/A":
+                contador_capitanes[team_name][capitan] += 1
+
+            cap_info['is_repeated_3_times'] = (contador_capitanes[team_name][capitan] == 3)
+            jornada_data.append(cap_info)
+
+        capitanes_por_jornada[round_number] = jornada_data
+
+    return capitanes_por_jornada
+
 # --- Función Principal ---
 def main():
     LOCAL_EXCEL_FILENAME = "SuperLiga Fuentmondo 25-26.xlsx"
@@ -772,7 +884,7 @@ def main():
     }
     TEAMS_2A = {
       "1":"SANTA LUCIA FC", "2":"Osasuna N.S.R", "3":"Tetitas Colesterol . F.C",
-      "4":"Pollos sin cabeza 🐥🧄", "5":"Charo la  Picanta FC", "6":"Kostas Mariotas",
+      "4":"Pollos sin cabeza 🐥🧄", "5":"Charo la   Picanta FC", "6":"Kostas Mariotas",
       "7":"Real Pescados el Puerto Fc", "8":"Team pepino", "9":"🇧🇷Samba Rovinha 🇧🇷",
       "10":"Banano Vallekano 🍌⚡", "11":"SICARIOS CF", "12":"Minabo De Kiev",
       "13":"Todo por la camiseta 🇪🇸", "14":"parker f.c.", "15":"Molinardo fc",
@@ -790,6 +902,14 @@ def main():
     if not payload_1a: return
     payload_2a = cargar_payload("payload.json")
     if not payload_2a: return
+
+    # --- OBTENCIÓN DE DATOS (SE EJECUTA SIEMPRE PARA EL HTML) ---
+    datos_general_1a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_1a))
+    datos_general_2a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_2a))
+    payload_teams_1a = copy.deepcopy(payload_1a); payload_teams_1a['query'] = {"championshipId": payload_1a["query"]["championshipId"]}
+    datos_teams_1a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_1a)
+    payload_teams_2a = copy.deepcopy(payload_2a); payload_teams_2a['query'] = {"championshipId": payload_2a["query"]["championshipId"]}
+    datos_teams_2a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_2a)
 
     rounds_data_1a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_1a))
     rounds_data_2a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_2a))
@@ -818,16 +938,13 @@ def main():
         if len(round_ranking_2a) >= len(TEAMS_2A):
             map_2a = {round_ranking_2a[i]['name']: TEAMS_2A[str(i + 1)] for i in range(len(TEAMS_2A))}
 
-    # --- [LÓGICA CONDICIONAL] PROCESO DE EXCEL ---
+    # Procesar clasificaciones
+    clasificacion_1a = _procesar_y_ordenar_clasificacion(datos_general_1a, datos_teams_1a, map_1a)
+    clasificacion_2a = _procesar_y_ordenar_clasificacion(datos_general_2a, datos_teams_2a, map_2a)
+
+    # --- LÓGICA CONDICIONAL: PROCESO DE EXCEL ---
     if modo in ['local', 'onedrive']:
         print("\n--- PROCESANDO ARCHIVO EXCEL ---")
-        datos_general_1a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_1a))
-        datos_general_2a = llamar_api("https://api.futmondo.com/1/ranking/general", copy.deepcopy(payload_2a))
-        payload_teams_1a = copy.deepcopy(payload_1a); payload_teams_1a['query'] = {"championshipId": payload_1a["query"]["championshipId"]}
-        datos_teams_1a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_1a)
-        payload_teams_2a = copy.deepcopy(payload_2a); payload_teams_2a['query'] = {"championshipId": payload_2a["query"]["championshipId"]}
-        datos_teams_2a = llamar_api("https://api.futmondo.com/2/championship/teams", payload_teams_2a)
-
         if all([datos_general_1a, datos_teams_1a, datos_general_2a, datos_teams_2a]):
             workbook = None
             try:
@@ -842,8 +959,8 @@ def main():
 
                 if workbook:
                     actualizar_cabeceras_capitanes(workbook, TEAMS_1A, TEAMS_2A)
-                    actualizar_hoja_excel(workbook, datos_general_1a, datos_teams_1a, "Clasificación 1a DIV", 5, 2, map_1a)
-                    actualizar_hoja_excel(workbook, datos_general_2a, datos_teams_2a, "Clasificación 2a DIV", 2, 3, map_2a)
+                    actualizar_hoja_excel(workbook, clasificacion_1a, "Clasificación 1a DIV", 5, 2)
+                    actualizar_hoja_excel(workbook, clasificacion_2a, "Clasificación 2a DIV", 2, 3)
                     actualizar_capitanes_historico(workbook, rounds_map_1a, payload_1a, "1a División", map_1a)
                     actualizar_capitanes_historico(workbook, rounds_map_2a, payload_2a, "2a División", map_2a)
 
@@ -859,16 +976,29 @@ def main():
         else:
             print("Faltan datos clave de la API para el Excel. Saltando actualización del Excel.")
     else:
-        print("\n--- MODO 'SOLO MULTAS' SELECCIONADO: SALTANDO PROCESO DE EXCEL ---")
+        print("\n--- MODO 'SOLO INFORME' SELECCIONADO: SALTANDO PROCESO DE EXCEL ---")
 
 
     # --- GENERACIÓN DEL INFORME HTML (SE EJECUTA SIEMPRE) ---
     datos_jornadas_1a, totales_1a = procesar_historico_jornadas(rounds_map_1a, payload_1a, map_1a, "primera")
     datos_jornadas_2a, totales_2a = procesar_historico_jornadas(rounds_map_2a, payload_2a, map_2a, "segunda")
 
+    capitanes_1a = recopilar_historico_capitanes(rounds_map_1a, payload_1a, map_1a, "primera")
+    capitanes_2a = recopilar_historico_capitanes(rounds_map_2a, payload_2a, map_2a, "segunda")
+
     datos_informe_completo = {
-        "primera": {"jornadas": datos_jornadas_1a, "totales": totales_1a},
-        "segunda": {"jornadas": datos_jornadas_2a, "totales": totales_2a}
+        "primera": {
+            "jornadas": datos_jornadas_1a,
+            "totales": totales_1a,
+            "clasificacion": clasificacion_1a,
+            "capitanes": capitanes_1a
+        },
+        "segunda": {
+            "jornadas": datos_jornadas_2a,
+            "totales": totales_2a,
+            "clasificacion": clasificacion_2a,
+            "capitanes": capitanes_2a
+        }
     }
 
     generar_pagina_html_completa(datos_informe_completo, "informe_multas.html")
