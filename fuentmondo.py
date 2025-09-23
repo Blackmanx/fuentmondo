@@ -258,17 +258,36 @@ def calcular_multas_jornada(
         team_b_name = team_map_name.get(team_indices[1])
         if not team_a_name or not team_b_name:
             continue
+
         lineup_a = dict_alineaciones.get(team_a_name, [])
         lineup_b = dict_alineaciones.get(team_b_name, [])
         nombres_a = {p['name'] for p in lineup_a}
         nombres_b = {p['name'] for p in lineup_b}
         capitan_a = dict_capitanes.get(team_a_name, "N/A")
         capitan_b = dict_capitanes.get(team_b_name, "N/A")
-        repetidos = nombres_a.intersection(nombres_b)
-        if repetidos:
-            multa_repetidos = len(repetidos) * 0.5
-            multas_finales[team_a_name]["desglose"]["jugadores_repetidos"] = {"cantidad": len(repetidos), "multa": multa_repetidos}
-            multas_finales[team_b_name]["desglose"]["jugadores_repetidos"] = {"cantidad": len(repetidos), "multa": multa_repetidos}
+
+        # --- LÓGICA DE MULTA POR REPETICIÓN MODIFICADA ---
+        # 1. Se identifican todos los jugadores en común.
+        repetidos_iniciales = nombres_a.intersection(nombres_b)
+
+        # 2. Se crea una copia de los repetidos que SÍ contarán para la multa.
+        repetidos_para_multa = repetidos_iniciales.copy()
+
+        # 3. Se excluye a los capitanes de la multa por repetición para evitar doble penalización.
+        #    La situación de un capitán repetido ya se gestiona con sus propias reglas.
+        if capitan_a != "N/A":
+            repetidos_para_multa.discard(capitan_a)
+        if capitan_b != "N/A":
+            repetidos_para_multa.discard(capitan_b)
+
+        # 4. Se calcula la multa solo si quedan jugadores en la lista filtrada.
+        if repetidos_para_multa:
+            cantidad_repetidos_multables = len(repetidos_para_multa)
+            multa_repetidos = cantidad_repetidos_multables * 0.5
+            multas_finales[team_a_name]["desglose"]["jugadores_repetidos"] = {"cantidad": cantidad_repetidos_multables, "multa": multa_repetidos}
+            multas_finales[team_b_name]["desglose"]["jugadores_repetidos"] = {"cantidad": cantidad_repetidos_multables, "multa": multa_repetidos}
+
+        # --- Lógica de multas por capitán (sin cambios) ---
         if capitan_a == capitan_b and capitan_a != "N/A":
             multas_finales[team_a_name]["desglose"]["capitan_repetido_con_rival"] = {"aplicado": True, "multa": 1.0}
             multas_finales[team_b_name]["desglose"]["capitan_repetido_con_rival"] = {"aplicado": True, "multa": 1.0}
@@ -276,24 +295,31 @@ def calcular_multas_jornada(
             multas_finales[team_b_name]["desglose"]["tenias_capitan_rival"] = {"aplicado": True, "multa": 1.0}
         if capitan_b in nombres_a and capitan_a != capitan_b:
             multas_finales[team_a_name]["desglose"]["tenias_capitan_rival"] = {"aplicado": True, "multa": 1.0}
+
+    # --- Lógica de otras multas (sin cambios) ---
     multas_peores = {1: 2.0, 2: 1.5, 3: 1.0}
     for item in lista_peores_equipos:
         pos = item['posicion']
         team_name = item['equipo']
         if team_name in multas_finales and pos in multas_peores:
             multas_finales[team_name]["desglose"]["peor_equipo_jornada"] = {"posicion": pos, "multa": multas_peores[pos]}
+
     nombres_peores_jugadores = {p['nombre'] for p in peores_jugadores_final}
     for team_name, alineacion in dict_alineaciones.items():
         nombres_jugadores = {p['name'] for p in alineacion}
         if not nombres_peores_jugadores.isdisjoint(nombres_jugadores):
             multas_finales[team_name]["desglose"]["alinear_peor_jugador"] = {"aplicado": True, "multa": 1.0}
+
     nombres_peores_capitanes = {p['nombre'] for p in peores_capitanes_final}
     for team_name, capitan in dict_capitanes.items():
         if capitan in nombres_peores_capitanes:
             multas_finales[team_name]["desglose"]["elegir_peor_capitan"] = {"aplicado": True, "multa": 1.0}
+
+    # --- Cálculo final de la multa total (sin cambios) ---
     for team_name, data in multas_finales.items():
         total = sum(d.get('multa', 0.0) for d in data['desglose'].values())
         multas_finales[team_name]['multa_total'] = round(total, 2)
+
     return multas_finales
 
 # --- Funciones de Generación de HTML ---
@@ -1001,7 +1027,7 @@ def main():
         }
     }
 
-    generar_pagina_html_completa(datos_informe_completo, "informe_multas.html")
+    generar_pagina_html_completa(datos_informe_completo, "index.html")
 
     print("\n--- Proceso completado. ---")
 
