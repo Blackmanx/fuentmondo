@@ -1,3 +1,5 @@
+from datetime import datetime
+import subprocess
 import requests
 import json
 import copy
@@ -896,8 +898,36 @@ def recopilar_historico_capitanes(rounds_map, payload_base, name_map, division_s
 
     return capitanes_por_jornada
 
+def subir_informe_a_github(ruta_archivo_html, GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO):
+    print("\n--- INTENTANDO SUBIR INFORME A GITHUB ---")
+    try:
+        remote_url = f"https://{GITHUB_TOKEN}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+
+        # 1. Añadir el archivo al área de preparación (staging)
+        subprocess.run(["git", "add", ruta_archivo_html], check=True)
+
+        # 2. Crear un commit con fecha y hora para que sea único
+        mensaje_commit = f"Informe de multas actualizado automáticamente - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        subprocess.run(["git", "commit", "-m", mensaje_commit], check=True)
+
+        # 3. Empujar los cambios al repositorio remoto (usando la URL con el token)
+        subprocess.run(["git", "push", remote_url], check=True)
+
+        print(f"✅ Informe '{ruta_archivo_html}' subido a GitHub con éxito.")
+
+    except FileNotFoundError:
+        print("❌ Error: Git no está instalado o no se encuentra en el PATH del sistema.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error durante la ejecución de un comando de Git: {e}")
+    except Exception as e:
+        print(f"❌ Ocurrió un error inesperado al intentar subir a GitHub: {e}")
+
 # --- Función Principal ---
 def main():
+    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+    GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
+    GITHUB_REPO = os.getenv("GITHUB_REPO")
+
     LOCAL_EXCEL_FILENAME = "SuperLiga Fuentmondo 25-26.xlsx"
     TEAMS_1A = {
         "1":"Galácticos de la noche FC", "2":"AL-CARRER F.C.", "3":"QUE BARBARIDAD FC",
@@ -1028,6 +1058,11 @@ def main():
     }
 
     generar_pagina_html_completa(datos_informe_completo, "index.html")
+
+    if all([GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO]):
+        subir_informe_a_github("index.html", GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO)
+    else:
+        print("\n--- AVISO: Faltan variables de entorno de GitHub (.env) para la subida automática. ---")
 
     print("\n--- Proceso completado. ---")
 
