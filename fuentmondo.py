@@ -220,17 +220,39 @@ def get_captains_for_round(payload_base, datos_ronda, name_map={}):
     return team_captains
 
 def procesar_rondas_api(rounds_list):
-    """Procesa la respuesta de la API de rondas, convirtiendo los números de ronda a enteros."""
+    """
+    Procesa la respuesta de la API de rondas, manejando números de ronda enteros y flotantes.
+    La lógica es la siguiente:
+    1.  Primero, identifica todas las jornadas que son números enteros (ej: 1, 2, 3).
+    2.  Luego, itera sobre todas las jornadas para construir el mapa final.
+    3.  Si una jornada es un número entero (ej: 4 o 4.0), se añade al mapa con su clave entera (4).
+    4.  Si una jornada es un número flotante (ej: 6.1), se comprueba si ya existe una jornada entera con su parte truncada (es decir, si existe la jornada 6).
+        - Si existe un conflicto (la jornada 6 ya existe), la jornada flotante se añade al mapa usando su valor original como clave (6.1).
+        - Si no hay conflicto (no existe la jornada 6), se trunca el número y se usa la parte entera como clave (6).
+    """
     if not rounds_list:
         return {}
+
     rounds_map = {}
+    all_numbers = [r['number'] for r in rounds_list if r.get('number') is not None]
+    existing_integer_rounds = {int(n) for n in all_numbers if n % 1 == 0}
+
     for r in rounds_list:
         round_num = r.get('number')
         round_id = r.get('id')
-        if not round_num or not round_id:
+
+        if round_num is None or not round_id:
             continue
+
         if round_num % 1 == 0:
             rounds_map[int(round_num)] = round_id
+        else:
+            truncated_num = int(round_num)
+            if truncated_num in existing_integer_rounds:
+                rounds_map[round_num] = round_id
+            else:
+                rounds_map[truncated_num] = round_id
+
     return rounds_map
 
 def calcular_multas_jornada(teams_in_round, matches, team_map_name, dict_alineaciones, dict_capitanes, lista_peores_equipos, peores_jugadores_final, peores_capitanes_final):
