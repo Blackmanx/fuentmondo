@@ -28,8 +28,8 @@ SCOPES = ['Files.ReadWrite.All']
 ONEDRIVE_SHARE_LINK = "https://1drv.ms/x/s!AidvQapyuNp6jBKR5uMUCaBYdLl0?e=3kXyKW"
 SANCIONES_FILE = "sanciones.json"
 
+# Crea y muestra una ventana para que el usuario elija el modo de ejecución.
 def choose_save_option():
-    """Crea y muestra una ventana para que el usuario elija el modo de ejecución."""
     root = tk.Tk()
     root.title("Modo de Ejecución")
     choice = [None]
@@ -62,8 +62,8 @@ def choose_save_option():
     root.mainloop()
     return choice[0]
 
+# Crea una ventana con el código de autenticación para que el usuario lo copie.
 def show_auth_code_window(message, verification_uri):
-    """Crea una ventana con el código de autenticación para que el usuario lo copie."""
     root = tk.Tk()
     root.title("Código de Autenticación")
     window_width = 450
@@ -94,8 +94,8 @@ def show_auth_code_window(message, verification_uri):
     tk.Button(root, text="Copiar Código y Abrir Navegador", command=copy_and_open, height=2, bg="#0078D4", fg="white").pack(pady=15, padx=20, fill='x')
     root.mainloop()
 
+# Se autentica de forma interactiva y obtiene un token de acceso para Microsoft Graph.
 def get_access_token():
-    """Se autentica de forma interactiva y obtiene un token de acceso para Microsoft Graph."""
     app = msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY)
     result = None
     accounts = app.get_accounts()
@@ -114,13 +114,13 @@ def get_access_token():
         print("Error al obtener el token de acceso:", result.get("error_description"))
         return None
 
+# Codifica un enlace de compartición de OneDrive a un formato compatible con la API de Graph.
 def encode_sharing_link(sharing_link):
-    """Codifica un enlace de compartición de OneDrive a un formato compatible con la API de Graph."""
     base64_value = base64.b64encode(sharing_link.encode('utf-8')).decode('utf-8')
     return 'u!' + base64_value.rstrip('=').replace('/', '_').replace('+', '-')
 
+# Obtiene el ID del Drive y el ID del archivo a partir de un enlace de compartición.
 def get_drive_item_from_share_link(access_token, share_url):
-    """Obtiene el ID del Drive y el ID del archivo a partir de un enlace de compartición."""
     encoded_url = encode_sharing_link(share_url)
     api_url = f"{GRAPH_API_ENDPOINT}/shares/{encoded_url}/driveItem"
     headers = {'Authorization': f'Bearer {access_token}'}
@@ -129,8 +129,8 @@ def get_drive_item_from_share_link(access_token, share_url):
     data = response.json()
     return data['parentReference']['driveId'], data['id']
 
+# Descarga el contenido de un archivo Excel desde OneDrive.
 def download_excel_from_onedrive(access_token, drive_id, item_id):
-    """Descarga el contenido de un archivo Excel desde OneDrive."""
     api_url = f"{GRAPH_API_ENDPOINT}/drives/{drive_id}/items/{item_id}/content"
     headers = {'Authorization': f'Bearer {access_token}'}
     response = requests.get(api_url, headers=headers)
@@ -138,8 +138,8 @@ def download_excel_from_onedrive(access_token, drive_id, item_id):
     print("Excel descargado de OneDrive con éxito.")
     return response.content
 
+# Sube (o sobrescribe) el contenido de un archivo Excel a OneDrive, con reintentos si está bloqueado.
 def upload_excel_to_onedrive(access_token, drive_id, item_id, file_content):
-    """Sube (o sobrescribe) el contenido de un archivo Excel a OneDrive, con reintentos si está bloqueado."""
     api_url = f"{GRAPH_API_ENDPOINT}/drives/{drive_id}/items/{item_id}/content"
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -161,8 +161,8 @@ def upload_excel_to_onedrive(access_token, drive_id, item_id, file_content):
                 raise
     print("No se pudo subir el archivo después de varios intentos.")
 
+# Carga un archivo JSON (payload) desde una ruta específica.
 def cargar_payload(ruta_archivo):
-    """Carga un archivo JSON (payload) desde una ruta específica."""
     try:
         with open(ruta_archivo, 'r', encoding='utf-8') as archivo:
             return json.load(archivo)
@@ -170,8 +170,8 @@ def cargar_payload(ruta_archivo):
         print(f"Error al cargar '{ruta_archivo}': {e}")
         return None
 
+# Realiza una llamada POST a una API con un payload JSON.
 def llamar_api(url, payload):
-    """Realiza una llamada POST a una API con un payload JSON."""
     if not payload: return None
     try:
         response = requests.post(url, json=payload)
@@ -181,8 +181,8 @@ def llamar_api(url, payload):
         print(f"Error en la llamada a la API '{url}': {e}")
         return None
 
+# Guarda los datos de respuesta de la API en un archivo JSON.
 def guardar_respuesta(datos, nombre_archivo):
-    """Guarda los datos de respuesta de la API en un archivo JSON."""
     try:
         os.makedirs(os.path.dirname(nombre_archivo), exist_ok=True)
         with open(nombre_archivo, 'w', encoding='utf-8') as f:
@@ -191,8 +191,8 @@ def guardar_respuesta(datos, nombre_archivo):
     except Exception as e:
         print(f"Error al guardar el archivo '{nombre_archivo}': {e}")
 
+# Obtiene una lista de los capitanes de todos los equipos para una ronda específica.
 def get_captains_for_round(payload_base, datos_ronda, name_map={}):
-    """Obtiene una lista de los capitanes de todos los equipos para una ronda específica."""
     team_captains = []
     if 'answer' not in datos_ronda or 'ranking' not in datos_ronda['answer']:
         return []
@@ -210,8 +210,8 @@ def get_captains_for_round(payload_base, datos_ronda, name_map={}):
 
     return team_captains
 
+# Obtiene la alineación de un equipo para una ronda específica.
 def get_lineup_for_round(payload_base, round_id, team_id):
-    """Obtiene la alineación de un equipo para una ronda específica."""
     API_URL_LINEUP = "https://api.futmondo.com/1/userteam/roundlineup"
     payload_lineup = {
         "header": copy.deepcopy(payload_base["header"]),
@@ -226,11 +226,8 @@ def get_lineup_for_round(payload_base, round_id, team_id):
         return datos_lineup['answer']['players']
     return []
 
-
+# Procesa la respuesta de la API de rondas, manejando números de ronda enteros y flotantes.
 def procesar_rondas_api(rounds_list):
-    """
-    Procesa la respuesta de la API de rondas, manejando números de ronda enteros y flotantes.
-    """
     if not rounds_list:
         return {}
 
@@ -256,8 +253,8 @@ def procesar_rondas_api(rounds_list):
 
     return rounds_map
 
+# Calcula las multas de una jornada con un desglose detallado.
 def calcular_multas_jornada(teams_in_round, matches, team_map_name, dict_alineaciones, dict_capitanes, lista_peores_equipos, peores_jugadores_final, peores_capitanes_final):
-    """Calcula las multas de una jornada con un desglose detallado."""
     multas_finales = {}
     for team_name in teams_in_round:
         multas_finales[team_name] = {
@@ -331,8 +328,8 @@ def calcular_multas_jornada(teams_in_round, matches, team_map_name, dict_alineac
 
     return multas_finales
 
+# Carga el archivo de sanciones o devuelve una estructura vacía si no existe.
 def cargar_sanciones(ruta_archivo):
-    """Carga el archivo de sanciones o devuelve una estructura vacía si no existe."""
     if not os.path.exists(ruta_archivo):
         return {"primera": {}, "segunda": {}}
     try:
@@ -341,8 +338,8 @@ def cargar_sanciones(ruta_archivo):
     except (FileNotFoundError, json.JSONDecodeError):
         return {"primera": {}, "segunda": {}}
 
+# Guarda el estado actual de las sanciones en un archivo JSON.
 def guardar_sanciones(datos, ruta_archivo):
-    """Guarda el estado actual de las sanciones en un archivo JSON."""
     try:
         with open(ruta_archivo, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=4, ensure_ascii=False)
@@ -350,8 +347,9 @@ def guardar_sanciones(datos, ruta_archivo):
     except Exception as e:
         print(f"Error al guardar el archivo de sanciones: {e}")
 
+# MODIFICADA: Añadida condición para el mensaje cuando quedan 0 partidos.
+# Envía un correo electrónico con las nuevas sanciones detectadas.
 def enviar_correo_sanciones(nuevas_sanciones_por_division):
-    """Envía un correo electrónico con las nuevas sanciones detectadas."""
     EMAIL_HOST = os.getenv("EMAIL_HOST")
     EMAIL_PORT = os.getenv("EMAIL_PORT")
     EMAIL_USER = os.getenv("EMAIL_USER")
@@ -362,7 +360,7 @@ def enviar_correo_sanciones(nuevas_sanciones_por_division):
         print("Faltan variables de entorno para el envío de correo. No se enviará la notificación.")
         return
 
-    cuerpo_correo = ""
+    cuerpo_mensaje = ""
     hay_novedades = False
 
     for division, equipos in nuevas_sanciones_por_division.items():
@@ -371,16 +369,19 @@ def enviar_correo_sanciones(nuevas_sanciones_por_division):
 
         hay_novedades = True
         titulo_division = "1ª DIVISIÓN" if division == "primera" else "2ª DIVISIÓN"
-        cuerpo_correo += f"--- NUEVAS SANCIONES {titulo_division} ---\n\n"
+        cuerpo_mensaje += f"--- NUEVAS SANCIONES {titulo_division} ---\n\n"
 
         for equipo, jugadores in equipos.items():
-            cuerpo_correo += f"Equipo: {equipo}\n"
             for jugador, sancion in jugadores.items():
-                cuerpo_correo += f"  - {jugador}:\n"
+                cuerpo_mensaje += f"*Equipo:* {equipo}\n"
+                cuerpo_mensaje += f"*Jugador:* {jugador}\n"
                 if sancion['type'] == '3_match_ban':
                     partidos_restantes = sancion.get('games_to_serve', 3) - sancion.get('games_served', 0)
-                    cuerpo_correo += f"    · Sanción de 3 partidos (Desde la Jornada {sancion['jornada_triggered']}). {partidos_restantes} por cumplir.\n"
-            cuerpo_correo += "\n"
+                    if partidos_restantes > 0:
+                        cuerpo_mensaje += f"*Estado:* Sanción de 3 partidos (Desde la Jornada {sancion['jornada_triggered']}). Le quedan {partidos_restantes} por cumplir.\n"
+                    else:
+                        cuerpo_mensaje += f"*Estado:* Puede volver al once, pero no como capitan.\n"
+                cuerpo_mensaje += "\n"
 
     if not hay_novedades:
         print("No se detectaron nuevas sanciones. No se enviará correo.")
@@ -389,8 +390,8 @@ def enviar_correo_sanciones(nuevas_sanciones_por_division):
     msg = MIMEMultipart()
     msg['From'] = EMAIL_USER
     msg['To'] = EMAIL_RECIPIENT
-    msg['Subject'] = f"Nuevas Sanciones SuperLiga - {datetime.now().strftime('%d/%m/%Y')}"
-    msg.attach(MIMEText(cuerpo_correo, 'plain'))
+    msg['Subject'] = f"Informe de Sanciones SuperLiga - {datetime.now().strftime('%d/%m/%Y')}"
+    msg.attach(MIMEText(cuerpo_mensaje, 'plain'))
 
     try:
         server = smtplib.SMTP(EMAIL_HOST, int(EMAIL_PORT))
@@ -403,8 +404,8 @@ def enviar_correo_sanciones(nuevas_sanciones_por_division):
     except Exception as e:
         print(f"Error al enviar el correo de notificación: {e}")
 
+# Genera el HTML para la tabla de multas de una jornada.
 def _generar_tabla_multas_jornada_html(multas_data):
-    """Genera el HTML para la tabla de multas de una jornada."""
     sorted_teams = sorted(multas_data.items(), key=lambda item: item[1]['multa_total'], reverse=True)
     table_rows = ""
     for i, (team_name, data) in enumerate(sorted_teams):
@@ -460,8 +461,8 @@ def _generar_tabla_multas_jornada_html(multas_data):
         </table>
     </div>"""
 
+# Genera el HTML para la tabla de multas totales acumuladas.
 def _generar_tabla_multas_totales_html(multas_acumuladas):
-    """Genera el HTML para la tabla de multas totales acumuladas."""
     sorted_teams = sorted(multas_acumuladas.items(), key=lambda item: item[1], reverse=True)
     table_rows = ""
     for i, (team_name, total_multa) in enumerate(sorted_teams):
@@ -484,8 +485,8 @@ def _generar_tabla_multas_totales_html(multas_acumuladas):
         </table>
     </div>"""
 
+# Genera el HTML para la tabla de clasificación.
 def _generar_tabla_clasificacion_html(ranking_ordenado):
-    """Genera el HTML para la tabla de clasificación."""
     table_rows = ""
     for i, equipo in enumerate(ranking_ordenado):
         row_bg = 'bg-slate-50' if i % 2 != 0 else 'bg-white'
@@ -511,8 +512,8 @@ def _generar_tabla_clasificacion_html(ranking_ordenado):
         </table>
     </div>"""
 
+# Genera el HTML para la tabla del historial de capitanes.
 def _generar_tabla_capitanes_html(datos_capitanes, team_names):
-    """Genera el HTML para la tabla del historial de capitanes."""
     if not datos_capitanes: return "<p>No hay datos de capitanes disponibles.</p>"
     sorted_jornadas = sorted(datos_capitanes.keys())
     sorted_teams = sorted(list(team_names))
@@ -528,12 +529,9 @@ def _generar_tabla_capitanes_html(datos_capitanes, team_names):
             cap_info = capitanes_jornada.get(team_name)
             if cap_info:
                 capitan_name = cap_info.get('capitan', 'N/A')
-                # Esta variable se activa en la 3ª capitanía, que es cuando entra en sanción
                 is_sanction_trigger = cap_info.get('is_red_card', False)
 
-                # Definimos las clases base de la celda
                 cell_classes = "p-3 border border-slate-300"
-                # Si se activa la sanción, añadimos las clases de resaltado amarillo
                 if is_sanction_trigger:
                     cell_classes += " bg-yellow-300 font-semibold"
 
@@ -550,15 +548,13 @@ def _generar_tabla_capitanes_html(datos_capitanes, team_names):
         </table>
     </div>"""
 
-# Reemplaza también esta función en tu script
+# MODIFICADA: Ajustado el texto para cuando se cumple la sanción.
+# Genera el HTML para la tabla de sanciones.
 def _generar_tabla_sanciones_html(sanciones_division):
-    """Genera el HTML para la tabla de sanciones, manejando los estados 'active' y 'captain_banned'."""
     if not any(sanciones_division.values()):
         return "<p>No hay sanciones activas o recientes en esta división.</p>"
 
     table_rows = ""
-
-    # Filtrar solo equipos con sanciones relevantes (no 'completed')
     equipos_con_sanciones = {team: players for team, players in sanciones_division.items() if any(s.get('status') != 'completed' for p in players.values() for s in p)}
 
     if not equipos_con_sanciones:
@@ -571,7 +567,6 @@ def _generar_tabla_sanciones_html(sanciones_division):
         sorted_jugadores = sorted(jugadores.items())
 
         for player_name, sanciones in sorted_jugadores:
-            # Priorizamos mostrar la sanción activa, si no, la de capitán prohibido
             sancion_a_mostrar = next((s for s in sanciones if s.get('status') == 'active'), None)
             if not sancion_a_mostrar:
                 sancion_a_mostrar = next((s for s in sanciones if s.get('status') == 'captain_banned'), None)
@@ -586,11 +581,12 @@ def _generar_tabla_sanciones_html(sanciones_division):
                 restantes = sancion_a_mostrar.get('games_to_serve', 3) - sancion_a_mostrar.get('games_served', 0)
                 if restantes > 0:
                     estado_html = f"<span class='font-bold text-red-600'>Sancionado</span><br>Le quedan {restantes} partido(s) por cumplir."
-                else: # Caso borde si se completa en la última jornada
-                    estado_html = "<span class='font-semibold text-orange-500'>Puede volver (Restringido)</span><br>Puede volver al once, pero no como capitán."
+                else:
+                    estado_html = "<span class='font-semibold text-orange-500'>Puede volver al once, pero no como capitan.</span>"
 
             elif sancion_a_mostrar['status'] == 'captain_banned':
-                estado_html = "<span class='font-semibold text-orange-500'>Puede volver (Restringido)</span><br>Puede volver al once, pero no como capitán."
+                jornada_fin_restriccion = sancion_a_mostrar.get('jornada_completed', 0) + 3
+                estado_html = f"<span class='font-semibold text-orange-500'>Puede volver al once, pero no como capitan.</span><br>Esta restricción dura hasta la Jornada {jornada_fin_restriccion}."
 
             table_rows += f"""
             <tr class="{row_bg}">
@@ -617,8 +613,8 @@ def _generar_tabla_sanciones_html(sanciones_division):
         </table>
     </div>"""
 
+# Genera la página HTML completa con todos los datos y la navegación usando Tailwind CSS.
 def generar_pagina_html_completa(datos_informe, output_path):
-    """Genera la página HTML completa con todos los datos y la navegación usando Tailwind CSS."""
     contenido_html = ""
     nav_links_html = ""
 
@@ -757,8 +753,8 @@ def generar_pagina_html_completa(datos_informe, output_path):
     except Exception as e:
         print(f"Error al guardar el archivo HTML final: {e}")
 
+# Procesa y ordena los datos de clasificación de la API.
 def _procesar_y_ordenar_clasificacion(datos_general, datos_teams, name_map={}):
-    """Procesa y ordena los datos de clasificación de la API."""
     puntos_generales_dict = {name_map.get(e['teamname'], e['teamname']): e['points'] for e in datos_teams['answer']['teams']}
     ranking_general_list = datos_general['answer']['ranking']
     equipos_para_ordenar = []
@@ -772,8 +768,8 @@ def _procesar_y_ordenar_clasificacion(datos_general, datos_teams, name_map={}):
         })
     return sorted(equipos_para_ordenar, key=lambda x: (x['points'], x['general_points']), reverse=True)
 
+# Actualiza una hoja de Excel con los datos de clasificación.
 def actualizar_hoja_excel(workbook, ranking_ordenado, sheet_name, fila_inicio, columna_inicio):
-    """Actualiza una hoja de Excel con los datos de clasificación."""
     try:
         sheet = workbook[sheet_name]
         for row in sheet.iter_rows(min_row=fila_inicio, max_row=sheet.max_row, min_col=columna_inicio, max_col=columna_inicio + 2):
@@ -788,8 +784,8 @@ def actualizar_hoja_excel(workbook, ranking_ordenado, sheet_name, fila_inicio, c
     except Exception as e:
         print(f"Error procesando la hoja '{sheet_name}' en memoria: {e}")
 
+# Actualiza las cabeceras con los nombres de los equipos en la hoja 'Capitanes'.
 def actualizar_cabeceras_capitanes(workbook, teams_dict_1a, teams_dict_2a):
-    """Actualiza las cabeceras con los nombres de los equipos en la hoja 'Capitanes'."""
     try:
         sheet = workbook["Capitanes"]
         print("Actualizando cabeceras de 1ª División en la hoja 'Capitanes'...")
@@ -808,8 +804,8 @@ def actualizar_cabeceras_capitanes(workbook, teams_dict_1a, teams_dict_2a):
     except Exception as e:
         print(f"Error al actualizar las cabeceras de la hoja 'Capitanes': {e}")
 
+# Actualiza la fila de una jornada con los capitanes de cada equipo en el Excel.
 def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
-    """Actualiza la fila de una jornada con los capitanes de cada equipo en el Excel."""
     try:
         sheet = workbook["Capitanes"]
         team_to_captain_col = {}
@@ -830,7 +826,7 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
                         col_to_update = team_to_captain_col[team_name]
                         sheet.cell(row=row_idx, column=col_to_update).value = captain
                     else:
-                        print(f"   -> Aviso: El equipo '{team_name}' no se encontró en la cabecera de la hoja 'Capitanes'.")
+                        print(f"    -> Aviso: El equipo '{team_name}' no se encontró en la cabecera de la hoja 'Capitanes'.")
                 print(f"Capitanes de la '{target_row_label}' actualizados en memoria.")
                 row_found = True
                 break
@@ -839,8 +835,8 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
     except Exception as e:
         print(f"Error actualizando la hoja 'Capitanes' para la jornada {round_number}: {e}")
 
+# Itera sobre todas las jornadas para actualizar el histórico de capitanes en el Excel.
 def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_name, name_map={}):
-    """Itera sobre todas las jornadas para actualizar el histórico de capitanes en el Excel."""
     print(f"\n--- INICIANDO ACTUALIZACIÓN HISTÓRICA DE CAPITANES PARA {division_name.upper()} (EXCEL) ---")
     sorted_round_numbers = sorted(rounds_map.keys())
     for round_number in sorted_round_numbers:
@@ -850,17 +846,17 @@ def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_
         payload_round['query'].update({'roundNumber': round_id, 'championshipId': payload_base['query']['championshipId']})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
         if not datos_ronda or 'answer' not in datos_ronda or datos_ronda['answer'] == 'api.error.general':
-            print(f"   -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+            print(f"    -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
             continue
         datos_ronda['query']['roundNumber'] = round_id
         team_captains = get_captains_for_round(payload_base, datos_ronda, name_map)
         if not team_captains:
-            print(f"   -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
+            print(f"    -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
             continue
         actualizar_hoja_capitanes(workbook, round_number, team_captains)
 
+# Procesa todos los datos de una ronda y calcula las multas correspondientes.
 def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={}):
-    """Procesa todos los datos de una ronda y calcula las multas correspondientes."""
     if not datos_ronda or 'answer' not in datos_ronda or 'matches' not in datos_ronda['answer']:
         print("Error: Respuesta de API de ronda inválida.")
         return None
@@ -938,8 +934,8 @@ def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={})
     )
     return multas_jornada
 
+# Itera sobre todas las jornadas para procesar y devolver los resultados y multas.
 def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str):
-    """Itera sobre todas las jornadas para procesar y devolver los resultados y multas."""
     print(f"\n--- RECOPILANDO DATOS DE MULTAS PARA {division_str.upper()} ---")
     multas_acumuladas = defaultdict(float)
     datos_jornadas = []
@@ -962,20 +958,15 @@ def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str
             print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
     return datos_jornadas, dict(multas_acumuladas)
 
-# Reemplaza esta función en tu script original
+# Recopila el historial de capitanes y alineaciones para procesar las sanciones de forma iterativa.
 def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_str, sanciones_existentes):
-    """
-    Recopila el historial de capitanes y alineaciones para procesar las sanciones de forma iterativa,
-    verificando que los jugadores cumplan su sanción no siendo alineados.
-    Introduce un estado post-sanción que prohíbe volver a ser capitán.
-    """
     print(f"\n--- PROCESANDO SANCIONES Y CAPITANES PARA {division_str.upper()} ---")
 
     sanciones_actualizadas = copy.deepcopy(sanciones_existentes)
     nuevas_sanciones = defaultdict(dict)
     sorted_rounds = sorted(rounds_map.keys())
 
-    # Paso 1: Recopilar todos los datos históricos (capitanes y alineaciones completas)
+    # Paso 1: Recopilar todos los datos históricos de capitanes.
     all_teams_data = {}
     print("Obteniendo datos históricos de todas las jornadas para análisis...")
     for round_number in sorted_rounds:
@@ -992,11 +983,7 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
             lineup_players = get_lineup_for_round(payload_base, round_id, team_id)
             capitan = next((p['name'] for p in lineup_players if p.get('cpt')), "N/A")
 
-            # Guardamos tanto el capitán como el set de nombres de la alineación para chequeos rápidos
-            all_teams_data.setdefault(team_name, {})[round_number] = {
-                'capitan': capitan,
-                'lineup': {p['name'] for p in lineup_players}
-            }
+            all_teams_data.setdefault(team_name, {})[round_number] = {'capitan': capitan}
 
     # Paso 2: Procesar la lógica de sanciones de forma cronológica
     contador_capitanes = defaultdict(lambda: defaultdict(int))
@@ -1008,28 +995,31 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
             round_data = all_teams_data.get(team_name, {}).get(round_number)
             if not round_data: continue
 
-            # A. Primero, actualizamos el estado de las sanciones ACTIVAS existentes para este equipo
+            # A. Actualizamos el estado de las sanciones existentes para este equipo
             for player, sanciones in sanciones_actualizadas[team_name].items():
+
+                # Sanciones de partido (estado 'active').
                 for sancion in filter(lambda s: s.get('status') == 'active', sanciones):
-                    # La sanción se cumple en la jornada SIGUIENTE a la que se activó
-                    if round_number > sancion['jornada_triggered']:
-                        # Si no fue alineado, cumple un partido
-                        if player not in round_data['lineup']:
-                            # Para evitar contar múltiples veces, se asume que 'games_served' está correcto hasta la jornada anterior
-                            partidos_ya_servidos = round_number - sancion['jornada_triggered'] - 1
-                            sancion['games_served'] = partidos_ya_servidos + 1
+                    rounds_passed = round_number - sancion['jornada_triggered']
 
-                        # Si ya cumplió los 3 partidos, cambiamos su estado
-                        if sancion.get('games_served', 0) >= sancion.get('games_to_serve', 3):
-                            sancion['status'] = 'captain_banned'
-                            sancion['jornada_completed'] = round_number
+                    if rounds_passed > 0:
+                        sancion['games_served'] = min(rounds_passed, sancion.get('games_to_serve', 3))
 
-            # B. Después, verificamos si se genera una NUEVA sanción en esta jornada
+                    if sancion.get('games_served', 0) >= sancion.get('games_to_serve', 3):
+                        sancion['status'] = 'captain_banned'
+                        sancion['jornada_completed'] = sancion['jornada_triggered'] + sancion.get('games_to_serve', 3)
+
+                # Sanciones de capitanía (estado 'captain_banned').
+                for sancion in filter(lambda s: s.get('status') == 'captain_banned', sanciones):
+                    if round_number >= sancion.get('jornada_completed', float('inf')) + 3:
+                        sancion['status'] = 'completed'
+                        sancion['jornada_fully_cleared'] = round_number
+
+            # B. Verificamos si se genera una NUEVA sanción en esta jornada
             capitan = round_data['capitan']
             if capitan != "N/A":
                 contador_capitanes[team_name][capitan] += 1
 
-                # Si es la 3ª, 6ª, 9ª... vez y no tiene una sanción activa, se le sanciona
                 if contador_capitanes[team_name][capitan] % 3 == 0:
                     sanciones_jugador = sanciones_actualizadas[team_name].setdefault(capitan, [])
                     if not any(s['status'] == 'active' for s in sanciones_jugador):
@@ -1060,26 +1050,20 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
 
     return capitanes_para_informe, sanciones_actualizadas, nuevas_sanciones
 
+# Sube el informe HTML a un repositorio de GitHub automáticamente.
 def subir_informe_a_github(ruta_archivo_html, GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO):
-    """Sube el informe HTML a un repositorio de GitHub automáticamente."""
     print("\n--- INTENTANDO SUBIR INFORME A GITHUB ---")
     try:
         remote_url = f"https://{GITHUB_TOKEN}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
-
         subprocess.run(["git", "add", ruta_archivo_html], check=True, capture_output=True, text=True)
-
         status_result = subprocess.run(["git", "status", "--porcelain"], check=True, capture_output=True, text=True)
         if ruta_archivo_html not in status_result.stdout:
             print("✅ No hay cambios detectados en el informe. No se necesita subir nada.")
             return
-
         mensaje_commit = f"Informe actualizado automáticamente - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         subprocess.run(["git", "commit", "-m", mensaje_commit], check=True, capture_output=True, text=True)
-
         subprocess.run(["git", "push", remote_url], check=True, capture_output=True, text=True)
-
         print(f"✅ Informe '{ruta_archivo_html}' subido a GitHub con éxito.")
-
     except FileNotFoundError:
         print("❌ Error: Git no está instalado o no se encuentra en el PATH del sistema.")
     except subprocess.CalledProcessError as e:
@@ -1087,8 +1071,8 @@ def subir_informe_a_github(ruta_archivo_html, GITHUB_TOKEN, GITHUB_USERNAME, GIT
     except Exception as e:
         print(f"❌ Ocurrió un error inesperado al intentar subir a GitHub: {e}")
 
+# Función principal que orquesta la ejecución del script.
 def main():
-    """Función principal que orquesta la ejecución del script."""
     GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
     GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
     GITHUB_REPO = os.getenv("GITHUB_REPO")
@@ -1208,7 +1192,6 @@ def main():
     guardar_sanciones(sanciones_finales, SANCIONES_FILE)
 
     nuevas_sanciones_totales = {"primera": nuevas_sanciones_1a, "segunda": nuevas_sanciones_2a}
-
     hay_nuevas_sanciones = any(nuevas_sanciones_totales["primera"].values()) or any(nuevas_sanciones_totales["segunda"].values())
 
     if hay_nuevas_sanciones:
@@ -1224,8 +1207,6 @@ def main():
             else:
                 print("Respuesta no válida. Por favor, introduce 's' para sí o 'n' para no.")
     else:
-        # La función 'enviar_correo_sanciones' ya muestra un mensaje si no hay nada,
-        # pero lo añadimos aquí para que el flujo sea más claro en la consola.
         print("\nNo se detectaron nuevas sanciones, no es necesario enviar correo.")
 
     datos_informe_completo = {
