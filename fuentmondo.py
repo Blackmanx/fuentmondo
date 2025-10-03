@@ -528,11 +528,16 @@ def _generar_tabla_capitanes_html(datos_capitanes, team_names):
             cap_info = capitanes_jornada.get(team_name)
             if cap_info:
                 capitan_name = cap_info.get('capitan', 'N/A')
-                is_red = cap_info.get('is_red_card', False)
+                # Esta variable se activa en la 3ª capitanía, que es cuando entra en sanción
+                is_sanction_trigger = cap_info.get('is_red_card', False)
 
-                class_attr = ' class="bg-red-400 font-semibold"' if is_red else ''
+                # Definimos las clases base de la celda
+                cell_classes = "p-3 border border-slate-300"
+                # Si se activa la sanción, añadimos las clases de resaltado amarillo
+                if is_sanction_trigger:
+                    cell_classes += " bg-yellow-300 font-semibold"
 
-                row_cols += f'<td{class_attr} class="p-3 border border-slate-300">{capitan_name}</td>'
+                row_cols += f'<td class="{cell_classes}">{capitan_name}</td>'
             else:
                 row_cols += '<td class="p-3 border border-slate-300">-</td>'
         body_rows += f"<tr class='{row_bg}'>{row_cols}</tr>"
@@ -545,33 +550,47 @@ def _generar_tabla_capitanes_html(datos_capitanes, team_names):
         </table>
     </div>"""
 
+# Reemplaza también esta función en tu script
 def _generar_tabla_sanciones_html(sanciones_division):
-    """Genera el HTML para la tabla de sanciones activas."""
+    """Genera el HTML para la tabla de sanciones, manejando los estados 'active' y 'captain_banned'."""
     if not any(sanciones_division.values()):
-        return "<p>No hay sanciones activas en esta división.</p>"
+        return "<p>No hay sanciones activas o recientes en esta división.</p>"
 
     table_rows = ""
 
-    sorted_teams = sorted(sanciones_division.items())
+    # Filtrar solo equipos con sanciones relevantes (no 'completed')
+    equipos_con_sanciones = {team: players for team, players in sanciones_division.items() if any(s.get('status') != 'completed' for p in players.values() for s in p)}
 
-    for i, (team_name, jugadores) in enumerate(sorted_teams):
+    if not equipos_con_sanciones:
+        return "<p>No hay sanciones activas o recientes en esta división.</p>"
+
+    sorted_teams = sorted(equipos_con_sanciones.items())
+
+    row_index = 0
+    for team_name, jugadores in sorted_teams:
         sorted_jugadores = sorted(jugadores.items())
 
-        for j, (player_name, sanciones) in enumerate(sorted_jugadores):
-            active_sanciones = [s for s in sanciones if s.get('status') == 'active']
-            if not active_sanciones:
+        for player_name, sanciones in sorted_jugadores:
+            # Priorizamos mostrar la sanción activa, si no, la de capitán prohibido
+            sancion_a_mostrar = next((s for s in sanciones if s.get('status') == 'active'), None)
+            if not sancion_a_mostrar:
+                sancion_a_mostrar = next((s for s in sanciones if s.get('status') == 'captain_banned'), None)
+
+            if not sancion_a_mostrar:
                 continue
 
-            row_bg = 'bg-slate-50' if i % 2 != 0 else 'bg-white'
-            sancion = active_sanciones[-1]
-
+            row_bg = 'bg-slate-50' if row_index % 2 != 0 else 'bg-white'
             estado_html = ""
-            if sancion['type'] == '3_match_ban':
-                restantes = sancion.get('games_to_serve', 3) - sancion.get('games_served', 0)
+
+            if sancion_a_mostrar['status'] == 'active':
+                restantes = sancion_a_mostrar.get('games_to_serve', 3) - sancion_a_mostrar.get('games_served', 0)
                 if restantes > 0:
                     estado_html = f"<span class='font-bold text-red-600'>Sancionado</span><br>Le quedan {restantes} partido(s) por cumplir."
-                else:
-                    estado_html = "<span class='font-semibold text-green-600'>Sanción cumplida</span><br>Puede volver a ser alineado."
+                else: # Caso borde si se completa en la última jornada
+                    estado_html = "<span class='font-semibold text-orange-500'>Puede volver (Restringido)</span><br>Puede volver al once, pero no como capitán."
+
+            elif sancion_a_mostrar['status'] == 'captain_banned':
+                estado_html = "<span class='font-semibold text-orange-500'>Puede volver (Restringido)</span><br>Puede volver al once, pero no como capitán."
 
             table_rows += f"""
             <tr class="{row_bg}">
@@ -579,9 +598,10 @@ def _generar_tabla_sanciones_html(sanciones_division):
                 <td class="p-3 border border-slate-300">{player_name}</td>
                 <td class="p-3 border border-slate-300">{estado_html}</td>
             </tr>"""
+            row_index += 1
 
     if not table_rows:
-        return "<p>No hay sanciones activas en esta división.</p>"
+        return "<p>No hay sanciones activas o recientes en esta división.</p>"
 
     return f"""
     <div class="overflow-x-auto">
@@ -596,7 +616,6 @@ def _generar_tabla_sanciones_html(sanciones_division):
             <tbody>{table_rows}</tbody>
         </table>
     </div>"""
-
 
 def generar_pagina_html_completa(datos_informe, output_path):
     """Genera la página HTML completa con todos los datos y la navegación usando Tailwind CSS."""
@@ -943,104 +962,103 @@ def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str
             print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
     return datos_jornadas, dict(multas_acumuladas)
 
+# Reemplaza esta función en tu script original
 def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_str, sanciones_existentes):
     """
-    Recopila el historial de capitanes y alineaciones, procesa las sanciones,
-    y devuelve los datos para el informe y las sanciones actualizadas.
+    Recopila el historial de capitanes y alineaciones para procesar las sanciones de forma iterativa,
+    verificando que los jugadores cumplan su sanción no siendo alineados.
+    Introduce un estado post-sanción que prohíbe volver a ser capitán.
     """
     print(f"\n--- PROCESANDO SANCIONES Y CAPITANES PARA {division_str.upper()} ---")
 
     sanciones_actualizadas = copy.deepcopy(sanciones_existentes)
     nuevas_sanciones = defaultdict(dict)
-
     sorted_rounds = sorted(rounds_map.keys())
 
-    # Paso 1: Recopilar todos los datos históricos primero
+    # Paso 1: Recopilar todos los datos históricos (capitanes y alineaciones completas)
     all_teams_data = {}
-    contador_capitanes = defaultdict(lambda: defaultdict(int))
-
+    print("Obteniendo datos históricos de todas las jornadas para análisis...")
     for round_number in sorted_rounds:
         round_id = rounds_map[round_number]
-        print(f"Obteniendo datos de Jornada {round_number} para análisis...")
-
         payload_round = copy.deepcopy(payload_base)
         payload_round['query'].update({'roundNumber': round_id})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
         if not datos_ronda or 'answer' not in datos_ronda: continue
 
-        ranking = datos_ronda.get('answer', {}).get('ranking', [])
-        for team_info in ranking:
+        for team_info in datos_ronda.get('answer', {}).get('ranking', []):
             team_id, team_name_api = team_info['_id'], team_info['name']
             team_name = name_map.get(team_name_api, team_name_api)
-            lineup = get_lineup_for_round(payload_base, round_id, team_id)
-            capitan = next((p['name'] for p in lineup if p.get('cpt')), "N/A")
 
+            lineup_players = get_lineup_for_round(payload_base, round_id, team_id)
+            capitan = next((p['name'] for p in lineup_players if p.get('cpt')), "N/A")
+
+            # Guardamos tanto el capitán como el set de nombres de la alineación para chequeos rápidos
             all_teams_data.setdefault(team_name, {})[round_number] = {
-                'lineup': {p['name'] for p in lineup},
-                'capitan': capitan
+                'capitan': capitan,
+                'lineup': {p['name'] for p in lineup_players}
             }
 
-    # Paso 2: Procesar la lógica de sanciones cronológicamente
-    for team_name, rounds_data in all_teams_data.items():
-        for round_number in sorted(rounds_data.keys()):
-            data = rounds_data[round_number]
-            capitan = data['capitan']
+    # Paso 2: Procesar la lógica de sanciones de forma cronológica
+    contador_capitanes = defaultdict(lambda: defaultdict(int))
 
-            # Actualizar sanciones existentes antes de comprobar nuevos triggers
-            sanciones_actualizadas.setdefault(team_name, {})
+    for team_name in all_teams_data.keys():
+        sanciones_actualizadas.setdefault(team_name, {})
+
+        for round_number in sorted_rounds:
+            round_data = all_teams_data.get(team_name, {}).get(round_number)
+            if not round_data: continue
+
+            # A. Primero, actualizamos el estado de las sanciones ACTIVAS existentes para este equipo
             for player, sanciones in sanciones_actualizadas[team_name].items():
-                sancion_activa = next((s for s in sanciones if s['type'] == '3_match_ban' and s['status'] == 'active'), None)
-                if sancion_activa:
-                    jornada_triggered = sancion_activa['jornada_triggered']
-                    # Los partidos cumplidos son las jornadas que han pasado desde la sanción
-                    games_served = round_number - jornada_triggered
-                    sancion_activa['games_served'] = min(games_served, 3)
+                for sancion in filter(lambda s: s.get('status') == 'active', sanciones):
+                    # La sanción se cumple en la jornada SIGUIENTE a la que se activó
+                    if round_number > sancion['jornada_triggered']:
+                        # Si no fue alineado, cumple un partido
+                        if player not in round_data['lineup']:
+                            # Para evitar contar múltiples veces, se asume que 'games_served' está correcto hasta la jornada anterior
+                            partidos_ya_servidos = round_number - sancion['jornada_triggered'] - 1
+                            sancion['games_served'] = partidos_ya_servidos + 1
 
-                    if sancion_activa['games_served'] >= 3:
-                        sancion_activa['status'] = 'completed'
+                        # Si ya cumplió los 3 partidos, cambiamos su estado
+                        if sancion.get('games_served', 0) >= sancion.get('games_to_serve', 3):
+                            sancion['status'] = 'captain_banned'
+                            sancion['jornada_completed'] = round_number
 
-            # Contar capitanías y comprobar si se activa una nueva sanción
+            # B. Después, verificamos si se genera una NUEVA sanción en esta jornada
+            capitan = round_data['capitan']
             if capitan != "N/A":
                 contador_capitanes[team_name][capitan] += 1
 
-                if contador_capitanes[team_name][capitan] >= 3:
+                # Si es la 3ª, 6ª, 9ª... vez y no tiene una sanción activa, se le sanciona
+                if contador_capitanes[team_name][capitan] % 3 == 0:
                     sanciones_jugador = sanciones_actualizadas[team_name].setdefault(capitan, [])
-                    sancion_activa_existente = any(s['type'] == '3_match_ban' and s['status'] == 'active' for s in sanciones_jugador)
+                    if not any(s['status'] == 'active' for s in sanciones_jugador):
+                        nueva_sancion = {
+                            'type': '3_match_ban',
+                            'jornada_triggered': round_number,
+                            'status': 'active',
+                            'games_to_serve': 3,
+                            'games_served': 0
+                        }
+                        sanciones_jugador.append(nueva_sancion)
+                        nuevas_sanciones[team_name][capitan] = nueva_sancion
 
-                    # Si es la 3ª (o 4ª, 5ª...) capitanía y NO hay una sanción ya activa para él
-                    if not sancion_activa_existente:
-                        # Se comprueba si la última sanción cumplida fue por una capitanía anterior
-                        # para evitar re-sancionar por la misma ofensa en un reprocesamiento.
-                        ultima_sancion_cumplida = next(reversed([s for s in sanciones_jugador if s['status'] == 'completed']), None)
-                        if not ultima_sancion_cumplida or ultima_sancion_cumplida['jornada_triggered'] < round_number:
-                            nueva_sancion = {
-                                'type': '3_match_ban',
-                                'jornada_triggered': round_number,
-                                'status': 'active',
-                                'games_to_serve': 3,
-                                'games_served': 0
-                            }
-                            sanciones_jugador.append(nueva_sancion)
-                            nuevas_sanciones[team_name][capitan] = nueva_sancion
-
-    # Paso 3: Preparar datos para el informe HTML final
+    # Paso 3: Preparar los datos finales para la tabla HTML
     capitanes_para_informe = {}
-    for team_name, rounds_data in all_teams_data.items():
-        for round_number in sorted(rounds_data.keys()):
-            capitanes_para_informe.setdefault(round_number, [])
-            capitan_name = rounds_data[round_number]['capitan']
+    for round_number in sorted_rounds:
+        capitanes_para_informe[round_number] = []
+        for team_name, rounds_data in all_teams_data.items():
+            if round_number in rounds_data:
+                capitan_name = rounds_data[round_number]['capitan']
+                cap_info = {'team_name': team_name, 'capitan': capitan_name}
 
-            cap_info = {'team_name': team_name, 'capitan': capitan_name}
-            sanciones_jugador = sanciones_actualizadas.get(team_name, {}).get(capitan_name, [])
+                sancion_del_dia = next((s for s in sanciones_actualizadas.get(team_name, {}).get(capitan_name, []) if s.get('jornada_triggered') == round_number), None)
+                if sancion_del_dia:
+                    cap_info['is_red_card'] = True
 
-            sancion_del_dia = next((s for s in sanciones_jugador if s['jornada_triggered'] == round_number), None)
-            if sancion_del_dia and sancion_del_dia['type'] == '3_match_ban':
-                cap_info['is_red_card'] = True
-
-            capitanes_para_informe[round_number].append(cap_info)
+                capitanes_para_informe[round_number].append(cap_info)
 
     return capitanes_para_informe, sanciones_actualizadas, nuevas_sanciones
-
 
 def subir_informe_a_github(ruta_archivo_html, GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO):
     """Sube el informe HTML a un repositorio de GitHub automáticamente."""
@@ -1190,7 +1208,25 @@ def main():
     guardar_sanciones(sanciones_finales, SANCIONES_FILE)
 
     nuevas_sanciones_totales = {"primera": nuevas_sanciones_1a, "segunda": nuevas_sanciones_2a}
-    enviar_correo_sanciones(nuevas_sanciones_totales)
+
+    hay_nuevas_sanciones = any(nuevas_sanciones_totales["primera"].values()) or any(nuevas_sanciones_totales["segunda"].values())
+
+    if hay_nuevas_sanciones:
+        while True:
+            prompt_text = "\nSe han detectado nuevas sanciones. ¿Quieres enviar el correo de notificación? (s/n): "
+            respuesta = input(prompt_text).lower().strip()
+            if respuesta in ['s', 'si']:
+                enviar_correo_sanciones(nuevas_sanciones_totales)
+                break
+            elif respuesta in ['n', 'no']:
+                print("Envío de correo cancelado por el usuario.")
+                break
+            else:
+                print("Respuesta no válida. Por favor, introduce 's' para sí o 'n' para no.")
+    else:
+        # La función 'enviar_correo_sanciones' ya muestra un mensaje si no hay nada,
+        # pero lo añadimos aquí para que el flujo sea más claro en la consola.
+        print("\nNo se detectaron nuevas sanciones, no es necesario enviar correo.")
 
     datos_informe_completo = {
         "primera": {
