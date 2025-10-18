@@ -1,0 +1,29 @@
+# Entorno y dependencias
+.env
+
+# Datos sensibles y payloads
+payload.json
+payload_primera.json
+
+# Archivo Excel de SuperLiga (ignora archivos con espacios)
+SuperLiga Fuentmondo 25-26.xlsx
+
+# Archivo de estado de sanciones
+sanciones.json
+
+# Carpeta de resultados generados
+resultados/
+
+# Archivos de respuesta y ejemplos de la API
+ejemplo_clasificacion.json
+ejemplo_matches.json
+respuesta_api.json
+respuesta_general.json
+respuesta_matches.json
+respuesta_teams.json
+
+# Archivos de respuesta con caracteres especiales (UTF-8)
+respuesta_general_Clasificación_1a_DIV.json
+respuesta_general_Clasificación_2a_DIV.json
+respuesta_teams_Clasificación_1a_DIV.json
+respuesta_teams_Clasificación_2a_DIV.json

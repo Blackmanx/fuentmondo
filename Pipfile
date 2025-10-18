@@ -6,9 +6,9 @@ name = "pypi"
 [packages]
 msal = "*"
 python-dotenv = "*"
-openpyxl = "*"
 requests = "*"
 pyperclip = "*"
+openpyxl = "*"
 
 [dev-packages]
 

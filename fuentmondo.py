@@ -12,6 +12,7 @@ import webbrowser
 import tkinter as tk
 import pyperclip
 import time
+import sys
 from collections import defaultdict
 from dotenv import load_dotenv
 import smtplib
@@ -347,44 +348,65 @@ def guardar_sanciones(datos, ruta_archivo):
     except Exception as e:
         print(f"Error al guardar el archivo de sanciones: {e}")
 
-# MODIFICADA: Añadida condición para el mensaje cuando quedan 0 partidos.
-# Envía un correo electrónico con las nuevas sanciones detectadas.
-def enviar_correo_sanciones(nuevas_sanciones_por_division):
+# Envía un correo con *todas* las sanciones activas y añade CC en Lunes/Viernes.
+def enviar_correo_sanciones(sanciones_por_division):
     EMAIL_HOST = os.getenv("EMAIL_HOST")
     EMAIL_PORT = os.getenv("EMAIL_PORT")
     EMAIL_USER = os.getenv("EMAIL_USER")
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
     EMAIL_RECIPIENT = os.getenv("EMAIL_RECIPIENT")
+    # Nueva variable de entorno para destinatarios en copia
+    EMAIL_RECIPIENTS_CC = os.getenv("EMAIL_RECIPIENTS_CC")
 
     if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD, EMAIL_RECIPIENT]):
         print("Faltan variables de entorno para el envío de correo. No se enviará la notificación.")
         return
 
     cuerpo_mensaje = ""
-    hay_novedades = False
+    hay_sanciones_activas = False
 
-    for division, equipos in nuevas_sanciones_por_division.items():
-        if not equipos:
-            continue
-
-        hay_novedades = True
+    for division, equipos in sanciones_por_division.items():
         titulo_division = "1ª DIVISIÓN" if division == "primera" else "2ª DIVISIÓN"
-        cuerpo_mensaje += f"--- NUEVAS SANCIONES {titulo_division} ---\n\n"
+        buffer_division = ""
+        division_con_sanciones = False
 
-        for equipo, jugadores in equipos.items():
-            for jugador, sancion in jugadores.items():
-                cuerpo_mensaje += f"*Equipo:* {equipo}\n"
-                cuerpo_mensaje += f"*Jugador:* {jugador}\n"
-                if sancion['type'] == '3_match_ban':
-                    partidos_restantes = sancion.get('games_to_serve', 3) - sancion.get('games_served', 0)
-                    if partidos_restantes > 0:
-                        cuerpo_mensaje += f"*Estado:* Sanción de 3 partidos (Desde la Jornada {sancion['jornada_triggered']}). Le quedan {partidos_restantes} por cumplir.\n"
+        for equipo, jugadores in sorted(equipos.items()):
+            buffer_equipo = ""
+            equipo_con_sanciones_en_buffer = False
+
+            for jugador, sanciones in sorted(jugadores.items()):
+                sancion_a_mostrar = next((s for s in sanciones if s.get('status') == 'active'), None)
+                if not sancion_a_mostrar:
+                    sancion_a_mostrar = next((s for s in sanciones if s.get('status') == 'captain_banned'), None)
+
+                if not sancion_a_mostrar:
+                    continue
+
+                hay_sanciones_activas = True
+                division_con_sanciones = True
+                equipo_con_sanciones_en_buffer = True
+                estado_str = ""
+
+                if sancion_a_mostrar['status'] == 'active':
+                    restantes = sancion_a_mostrar.get('games_to_serve', 3) - sancion_a_mostrar.get('games_served', 0)
+                    if restantes > 0:
+                        estado_str = f"Sancionado, le queda(n) {restantes} partido(s) por cumplir."
                     else:
-                        cuerpo_mensaje += f"*Estado:* Puede volver al once, pero no como capitan.\n"
-                cuerpo_mensaje += "\n"
+                        estado_str = "Puede volver al once, pero no como capitan."
+                elif sancion_a_mostrar['status'] == 'captain_banned':
+                    jornada_fin_restriccion = sancion_a_mostrar.get('jornada_completed', 0) + 3
+                    estado_str = f"Puede volver al once, pero no como capitan. Restricción hasta la Jornada {jornada_fin_restriccion}."
+                
+                buffer_equipo += f"{jugador}: {estado_str}\n"
 
-    if not hay_novedades:
-        print("No se detectaron nuevas sanciones. No se enviará correo.")
+            if equipo_con_sanciones_en_buffer:
+                buffer_division += f"- {equipo}\n{buffer_equipo}"
+
+        if division_con_sanciones:
+            cuerpo_mensaje += f"\n*Sanciones Activas - {titulo_division}*\n{buffer_division}"
+
+    if not hay_sanciones_activas:
+        print("No se detectaron sanciones activas. No se enviará correo.")
         return
 
     msg = MIMEMultipart()
@@ -393,14 +415,28 @@ def enviar_correo_sanciones(nuevas_sanciones_por_division):
     msg['Subject'] = f"Informe de Sanciones SuperLiga - {datetime.now().strftime('%d/%m/%Y')}"
     msg.attach(MIMEText(cuerpo_mensaje, 'plain'))
 
+    # --- Lógica de CC para Lunes y Viernes ---
+    dia_semana = datetime.now().weekday() # Lunes es 0, Viernes es 4
+    lista_destinatarios = [EMAIL_RECIPIENT]
+    mensaje_cc = ""
+
+    if EMAIL_RECIPIENTS_CC and dia_semana in [1, 4]:
+        msg['Cc'] = EMAIL_RECIPIENTS_CC
+        # Asumimos que EMAIL_RECIPIENTS_CC es una cadena de correos separados por coma
+        lista_destinatarios.extend([email.strip() for email in EMAIL_RECIPIENTS_CC.split(',')])
+        mensaje_cc = f" (y a destinatarios en copia: {EMAIL_RECIPIENTS_CC})"
+        print(f"Hoy es martes o viernes. Añadiendo destinatarios en CC: {EMAIL_RECIPIENTS_CC}")
+    # --- Fin de la lógica de CC ---
+
     try:
         server = smtplib.SMTP(EMAIL_HOST, int(EMAIL_PORT))
         server.starttls()
         server.login(EMAIL_USER, EMAIL_PASSWORD)
         text = msg.as_string()
-        server.sendmail(EMAIL_USER, EMAIL_RECIPIENT, text)
+        # Usamos la lista de destinatarios (To + Cc) para el método sendmail
+        server.sendmail(EMAIL_USER, lista_destinatarios, text)
         server.quit()
-        print(f"Correo de notificación de sanciones enviado a '{EMAIL_RECIPIENT}'.")
+        print(f"Correo de informe de sanciones enviado a '{EMAIL_RECIPIENT}'{mensaje_cc}.")
     except Exception as e:
         print(f"Error al enviar el correo de notificación: {e}")
 
@@ -548,7 +584,6 @@ def _generar_tabla_capitanes_html(datos_capitanes, team_names):
         </table>
     </div>"""
 
-# MODIFICADA: Ajustado el texto para cuando se cumple la sanción.
 # Genera el HTML para la tabla de sanciones.
 def _generar_tabla_sanciones_html(sanciones_division):
     if not any(sanciones_division.values()):
@@ -826,7 +861,7 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
                         col_to_update = team_to_captain_col[team_name]
                         sheet.cell(row=row_idx, column=col_to_update).value = captain
                     else:
-                        print(f"    -> Aviso: El equipo '{team_name}' no se encontró en la cabecera de la hoja 'Capitanes'.")
+                        print(f"     -> Aviso: El equipo '{team_name}' no se encontró en la cabecera de la hoja 'Capitanes'.")
                 print(f"Capitanes de la '{target_row_label}' actualizados en memoria.")
                 row_found = True
                 break
@@ -846,12 +881,12 @@ def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_
         payload_round['query'].update({'roundNumber': round_id, 'championshipId': payload_base['query']['championshipId']})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
         if not datos_ronda or 'answer' not in datos_ronda or datos_ronda['answer'] == 'api.error.general':
-            print(f"    -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+            print(f"     -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
             continue
         datos_ronda['query']['roundNumber'] = round_id
         team_captains = get_captains_for_round(payload_base, datos_ronda, name_map)
         if not team_captains:
-            print(f"    -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
+            print(f"     -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
             continue
         actualizar_hoja_capitanes(workbook, round_number, team_captains)
 
@@ -1097,7 +1132,16 @@ def main():
       "19":"Morenetes de la Giralda 🍩", "20":"Jamon York F.C.", "21":"Elche pero Peor",
       "22":"Motobetis a primera!", "23":"MTB Drink Team", "24":"Patejas"
     }
-    modo = choose_save_option()
+    
+    force_email = False
+    # Comprueba si se pasó el argumento --auto para ejecución automática
+    if len(sys.argv) > 1 and sys.argv[1] == '--auto':
+        modo = 'local_auto'
+        force_email = True
+        print("Modo automático detectado. Actualizando localmente y forzando envío de email.")
+    else:
+        modo = choose_save_option()
+
     if not modo:
         print("No se seleccionó ninguna opción. Finalizando el script.")
         return
@@ -1147,14 +1191,14 @@ def main():
     clasificacion_1a = _procesar_y_ordenar_clasificacion(datos_general_1a, datos_teams_1a, map_1a)
     clasificacion_2a = _procesar_y_ordenar_clasificacion(datos_general_2a, datos_teams_2a, map_2a)
 
-    if modo in ['local', 'onedrive']:
+    if modo in ['local', 'onedrive', 'local_auto']:
         print("\n--- PROCESANDO ARCHIVO EXCEL ---")
         if all([datos_general_1a, datos_teams_1a, datos_general_2a, datos_teams_2a]):
             workbook = None
             try:
-                if modo == 'local':
+                if modo in ['local', 'local_auto']:
                     workbook = openpyxl.load_workbook(LOCAL_EXCEL_FILENAME)
-                else:
+                elif modo == 'onedrive':
                     access_token = get_access_token()
                     if not access_token: raise Exception("No se pudo obtener el token de acceso.")
                     drive_id, item_id = get_drive_item_from_share_link(access_token, ONEDRIVE_SHARE_LINK)
@@ -1168,10 +1212,10 @@ def main():
                     actualizar_capitanes_historico(workbook, rounds_map_1a, payload_1a, "1a División", map_1a)
                     actualizar_capitanes_historico(workbook, rounds_map_2a, payload_2a, "2a División", map_2a)
 
-                    if modo == 'local':
+                    if modo in ['local', 'local_auto']:
                         workbook.save(LOCAL_EXCEL_FILENAME)
                         print(f"\nArchivo '{LOCAL_EXCEL_FILENAME}' guardado localmente.")
-                    else:
+                    elif modo == 'onedrive':
                         buffer = io.BytesIO()
                         workbook.save(buffer)
                         upload_excel_to_onedrive(access_token, drive_id, item_id, buffer.getvalue())
@@ -1191,23 +1235,27 @@ def main():
     sanciones_finales = {"primera": sanciones_1a, "segunda": sanciones_2a}
     guardar_sanciones(sanciones_finales, SANCIONES_FILE)
 
-    nuevas_sanciones_totales = {"primera": nuevas_sanciones_1a, "segunda": nuevas_sanciones_2a}
-    hay_nuevas_sanciones = any(nuevas_sanciones_totales["primera"].values()) or any(nuevas_sanciones_totales["segunda"].values())
-
-    if hay_nuevas_sanciones:
-        while True:
-            prompt_text = "\nSe han detectado nuevas sanciones. ¿Quieres enviar el correo de notificación? (s/n): "
-            respuesta = input(prompt_text).lower().strip()
-            if respuesta in ['s', 'si']:
-                enviar_correo_sanciones(nuevas_sanciones_totales)
-                break
-            elif respuesta in ['n', 'no']:
-                print("Envío de correo cancelado por el usuario.")
-                break
-            else:
-                print("Respuesta no válida. Por favor, introduce 's' para sí o 'n' para no.")
+    if force_email:
+        print("\nModo automático: Enviando informe de sanciones...")
+        enviar_correo_sanciones(sanciones_finales)
     else:
-        print("\nNo se detectaron nuevas sanciones, no es necesario enviar correo.")
+        nuevas_sanciones_totales = {"primera": nuevas_sanciones_1a, "segunda": nuevas_sanciones_2a}
+        hay_nuevas_sanciones = any(nuevas_sanciones_totales["primera"].values()) or any(nuevas_sanciones_totales["segunda"].values())
+
+        if hay_nuevas_sanciones:
+            while True:
+                prompt_text = "\nSe han detectado nuevas sanciones. ¿Quieres enviar el correo con el informe completo de sanciones? (s/n): "
+                respuesta = input(prompt_text).lower().strip()
+                if respuesta in ['s', 'si']:
+                    enviar_correo_sanciones(sanciones_finales)
+                    break
+                elif respuesta in ['n', 'no']:
+                    print("Envío de correo cancelado por el usuario.")
+                    break
+                else:
+                    print("Respuesta no válida. Por favor, introduce 's' para sí o 'n' para no.")
+        else:
+            print("\nNo se detectaron nuevas sanciones, no es necesario enviar correo.")
 
     datos_informe_completo = {
         "primera": {
