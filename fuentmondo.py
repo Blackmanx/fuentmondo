@@ -9,7 +9,7 @@ import io
 import base64
 import msal
 import webbrowser
-import tkinter as tk
+
 import pyperclip
 import time
 import sys
@@ -29,71 +29,43 @@ SCOPES = ['Files.ReadWrite.All']
 ONEDRIVE_SHARE_LINK = "https://1drv.ms/x/s!AidvQapyuNp6jBKR5uMUCaBYdLl0?e=3kXyKW"
 SANCIONES_FILE = "sanciones.json"
 
-# Crea y muestra una ventana para que el usuario elija el modo de ejecución.
+# Muestra un menú en la terminal para que el usuario elija el modo de ejecución.
 def choose_save_option():
-    root = tk.Tk()
-    root.title("Modo de Ejecución")
-    choice = [None]
-    window_width = 550
-    window_height = 150
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    center_x = int(screen_width/2 - window_width / 2)
-    center_y = int(screen_height/2 - window_height / 2)
-    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
-    root.attributes('-topmost', True)
+    print("\n--- MODO DE EJECUCIÓN ---")
+    print("1. Actualizar Excel en OneDrive")
+    print("2. Actualizar Excel Localmente")
+    print("3. Generar Solo Informe (HTML)")
+    
+    while True:
+        choice = input("\nElige una opción (1-3): ").strip()
+        if choice == '1':
+            return 'onedrive'
+        elif choice == '2':
+            return 'local'
+        elif choice == '3':
+            return 'multas_only'
+        else:
+            print("Opción no válida. Por favor, introduce 1, 2 o 3.")
 
-    def select_option(option):
-        choice[0] = option
-        root.destroy()
-
-    tk.Label(root, text="Elige qué quieres hacer:", pady=15, font=("Helvetica", 12)).pack()
-    button_frame = tk.Frame(root)
-    button_frame.pack(pady=10)
-
-    btn_onedrive = tk.Button(button_frame, text="Actualizar Excel en OneDrive", command=lambda: select_option('onedrive'), height=2, width=25, bg="#0078D4", fg="white")
-    btn_onedrive.pack(side=tk.LEFT, padx=5)
-
-    btn_local = tk.Button(button_frame, text="Actualizar Excel Localmente", command=lambda: select_option('local'), height=2, width=25)
-    btn_local.pack(side=tk.LEFT, padx=5)
-
-    btn_multas = tk.Button(button_frame, text="Generar Solo Informe (HTML)", command=lambda: select_option('multas_only'), height=2, width=25, bg="#28a745", fg="white")
-    btn_multas.pack(side=tk.LEFT, padx=5)
-
-    root.mainloop()
-    return choice[0]
-
-# Crea una ventana con el código de autenticación para que el usuario lo copie.
+# Muestra el código de autenticación en la terminal.
 def show_auth_code_window(message, verification_uri):
-    root = tk.Tk()
-    root.title("Código de Autenticación")
-    window_width = 450
-    window_height = 200
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-    center_x = int(screen_width/2 - window_width / 2)
-    center_y = int(screen_height/2 - window_height / 2)
-    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
-    root.attributes('-topmost', True)
     try:
         user_code = message.split("enter the code ")[1].split(" to authenticate")[0]
     except IndexError:
         user_code = "No se pudo extraer el código"
 
-    def copy_and_open():
-        pyperclip.copy(user_code)
-        print("Código copiado al portapapeles.")
-        webbrowser.open(verification_uri)
-        root.destroy()
-
-    tk.Label(root, text="Copia este código y pégalo en la ventana del navegador que se abrirá:", wraplength=420, pady=10).pack()
-    code_font = ("Courier", 16, "bold")
-    code_entry = tk.Entry(root, justify='center', font=code_font, relief='flat', bd=0, highlightthickness=1)
-    code_entry.insert(0, user_code)
-    code_entry.config(state='readonly', readonlybackground='white', fg='black')
-    code_entry.pack(pady=10, ipady=5)
-    tk.Button(root, text="Copiar Código y Abrir Navegador", command=copy_and_open, height=2, bg="#0078D4", fg="white").pack(pady=15, padx=20, fill='x')
-    root.mainloop()
+    print("\n" + "="*60)
+    print("AUTENTICACIÓN REQUERIDA")
+    print("="*60)
+    print(f"1. Copia este código: {user_code}")
+    print(f"2. Abre esta URL en tu navegador: {verification_uri}")
+    print("="*60)
+    
+    pyperclip.copy(user_code)
+    print("(El código ha sido copiado al portapapeles automáticamente)")
+    
+    webbrowser.open(verification_uri)
+    input("\nPresiona Enter después de haberte autenticado en el navegador...")
 
 # Se autentica de forma interactiva y obtiene un token de acceso para Microsoft Graph.
 def get_access_token():
@@ -266,7 +238,8 @@ def calcular_multas_jornada(teams_in_round, matches, team_map_name, dict_alineac
                 "tenias_capitan_rival": {"aplicado": False, "multa": 0.0},
                 "peor_equipo_jornada": {"posicion": 0, "multa": 0.0},
                 "alinear_peor_jugador": {"aplicado": False, "multa": 0.0},
-                "elegir_peor_capitan": {"aplicado": False, "multa": 0.0}
+                "elegir_peor_capitan": {"aplicado": False, "multa": 0.0},
+                "alineacion_indebida": {"cantidad": 0, "multa": 0.0, "jugadores": []}
             }
         }
     for match in matches:
@@ -349,7 +322,7 @@ def guardar_sanciones(datos, ruta_archivo):
         print(f"Error al guardar el archivo de sanciones: {e}")
 
 # Envía un correo con *todas* las sanciones activas y añade CC en Lunes/Viernes.
-def enviar_correo_sanciones(sanciones_por_division):
+def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None):
     EMAIL_HOST = os.getenv("EMAIL_HOST")
     EMAIL_PORT = os.getenv("EMAIL_PORT")
     EMAIL_USER = os.getenv("EMAIL_USER")
@@ -404,6 +377,17 @@ def enviar_correo_sanciones(sanciones_por_division):
 
         if division_con_sanciones:
             cuerpo_mensaje += f"\n*Sanciones Activas - {titulo_division}*\n{buffer_division}"
+
+    if violaciones_detectadas:
+        cuerpo_mensaje += "\n\n⚠️  *ALINEACIONES INDEBIDAS DETECTADAS (MULTA 5€)* ⚠️\n"
+        hay_sanciones_activas = True # Forzar envío si hay multas nuevas
+        for division, violaciones in violaciones_detectadas.items():
+            if not violaciones: continue
+            titulo_division = "1ª DIVISIÓN" if division == "primera" else "2ª DIVISIÓN"
+            cuerpo_mensaje += f"\n{titulo_division}:\n"
+            for team_name, lista_multas in violaciones.items():
+                for m in lista_multas:
+                    cuerpo_mensaje += f"- {team_name}: Alineó a {m['jugador']} en la Jornada {m['jornada']} (Sancionado).\n"
 
     if not hay_sanciones_activas:
         print("No se detectaron sanciones activas. No se enviará correo.")
@@ -470,6 +454,11 @@ def _generar_tabla_multas_jornada_html(multas_data):
         epc = desglose.get("elegir_peor_capitan", {})
         if epc.get("multa", 0) > 0:
             desglose_html += f"<li>Elegir al peor capitán: {epc.get('multa', 0):.2f}€</li>"
+        
+        ali = desglose.get("alineacion_indebida", {})
+        if ali.get("multa", 0) > 0:
+            jugadores_str = ", ".join(ali.get("jugadores", []))
+            desglose_html += f"<li class='text-red-600 font-bold'>Alineación indebida ({jugadores_str}): {ali.get('multa', 0):.2f}€</li>"
 
         desglose_html += "</ul>"
 
@@ -1018,10 +1007,14 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
             lineup_players = get_lineup_for_round(payload_base, round_id, team_id)
             capitan = next((p['name'] for p in lineup_players if p.get('cpt')), "N/A")
 
-            all_teams_data.setdefault(team_name, {})[round_number] = {'capitan': capitan}
+            all_teams_data.setdefault(team_name, {})[round_number] = {
+                'capitan': capitan,
+                'players': [p['name'] for p in lineup_players]
+            }
 
     # Paso 2: Procesar la lógica de sanciones de forma cronológica
     contador_capitanes = defaultdict(lambda: defaultdict(int))
+    multas_alineacion_indebida = defaultdict(list)
 
     for team_name in all_teams_data.keys():
         sanciones_actualizadas.setdefault(team_name, {})
@@ -1035,6 +1028,15 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
 
                 # Sanciones de partido (estado 'active').
                 for sancion in filter(lambda s: s.get('status') == 'active', sanciones):
+                    # Verificar alineación indebida
+                    current_players = round_data.get('players', [])
+                    if player in current_players and round_number > sancion['jornada_triggered']:
+                        multas_alineacion_indebida[team_name].append({
+                            'jornada': round_number,
+                            'jugador': player,
+                            'multa': 5.0
+                        })
+
                     rounds_passed = round_number - sancion['jornada_triggered']
 
                     if rounds_passed > 0:
@@ -1083,7 +1085,7 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
 
                 capitanes_para_informe[round_number].append(cap_info)
 
-    return capitanes_para_informe, sanciones_actualizadas, nuevas_sanciones
+    return capitanes_para_informe, sanciones_actualizadas, nuevas_sanciones, multas_alineacion_indebida
 
 # Sube el informe HTML a un repositorio de GitHub automáticamente.
 def subir_informe_a_github(ruta_archivo_html, GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO):
@@ -1229,25 +1231,56 @@ def main():
     datos_jornadas_1a, totales_1a = procesar_historico_jornadas(rounds_map_1a, payload_1a, map_1a, "primera")
     datos_jornadas_2a, totales_2a = procesar_historico_jornadas(rounds_map_2a, payload_2a, map_2a, "segunda")
 
-    capitanes_1a, sanciones_1a, nuevas_sanciones_1a = procesar_sanciones_y_capitanes(rounds_map_1a, payload_1a, map_1a, "primera", sanciones_iniciales["primera"])
-    capitanes_2a, sanciones_2a, nuevas_sanciones_2a = procesar_sanciones_y_capitanes(rounds_map_2a, payload_2a, map_2a, "segunda", sanciones_iniciales["segunda"])
+    capitanes_1a, sanciones_1a, nuevas_sanciones_1a, violaciones_1a = procesar_sanciones_y_capitanes(rounds_map_1a, payload_1a, map_1a, "primera", sanciones_iniciales["primera"])
+    capitanes_2a, sanciones_2a, nuevas_sanciones_2a, violaciones_2a = procesar_sanciones_y_capitanes(rounds_map_2a, payload_2a, map_2a, "segunda", sanciones_iniciales["segunda"])
+
+    # Integrar multas por alineación indebida en datos_jornadas y totales
+    def integrar_violaciones(datos_jornadas, totales, violaciones):
+        for team_name, lista_multas in violaciones.items():
+            for multa in lista_multas:
+                jornada_num = multa['jornada']
+                monto = multa['multa']
+                jugador = multa['jugador']
+                
+                # Actualizar totales
+                totales[team_name] = totales.get(team_name, 0.0) + monto
+                
+                # Actualizar desglose jornada
+                for jornada_data in datos_jornadas:
+                    if jornada_data['numero'] == jornada_num:
+                        if team_name in jornada_data['multas']:
+                            team_data = jornada_data['multas'][team_name]
+                            team_data['multa_total'] += monto
+                            desglose = team_data['desglose']
+                            if 'alineacion_indebida' not in desglose:
+                                desglose['alineacion_indebida'] = {"cantidad": 0, "multa": 0.0, "jugadores": []}
+                            
+                            desglose['alineacion_indebida']['cantidad'] += 1
+                            desglose['alineacion_indebida']['multa'] += monto
+                            desglose['alineacion_indebida']['jugadores'].append(jugador)
+                        break
+
+    integrar_violaciones(datos_jornadas_1a, totales_1a, violaciones_1a)
+    integrar_violaciones(datos_jornadas_2a, totales_2a, violaciones_2a)
 
     sanciones_finales = {"primera": sanciones_1a, "segunda": sanciones_2a}
+    violaciones_totales = {"primera": violaciones_1a, "segunda": violaciones_2a}
     guardar_sanciones(sanciones_finales, SANCIONES_FILE)
 
     if force_email:
         print("\nModo automático: Enviando informe de sanciones...")
-        enviar_correo_sanciones(sanciones_finales)
+        enviar_correo_sanciones(sanciones_finales, violaciones_totales)
     else:
         nuevas_sanciones_totales = {"primera": nuevas_sanciones_1a, "segunda": nuevas_sanciones_2a}
         hay_nuevas_sanciones = any(nuevas_sanciones_totales["primera"].values()) or any(nuevas_sanciones_totales["segunda"].values())
+        hay_violaciones = any(violaciones_totales["primera"].values()) or any(violaciones_totales["segunda"].values())
 
-        if hay_nuevas_sanciones:
+        if hay_nuevas_sanciones or hay_violaciones:
             while True:
-                prompt_text = "\nSe han detectado nuevas sanciones. ¿Quieres enviar el correo con el informe completo de sanciones? (s/n): "
+                prompt_text = "\nSe han detectado nuevas sanciones o alineaciones indebidas. ¿Quieres enviar el correo con el informe completo? (s/n): "
                 respuesta = input(prompt_text).lower().strip()
                 if respuesta in ['s', 'si']:
-                    enviar_correo_sanciones(sanciones_finales)
+                    enviar_correo_sanciones(sanciones_finales, violaciones_totales)
                     break
                 elif respuesta in ['n', 'no']:
                     print("Envío de correo cancelado por el usuario.")
