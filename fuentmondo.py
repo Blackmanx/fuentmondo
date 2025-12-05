@@ -515,10 +515,18 @@ def _generar_tabla_clasificacion_html(ranking_ordenado):
     table_rows = ""
     for i, equipo in enumerate(ranking_ordenado):
         row_bg = 'bg-slate-50' if i % 2 != 0 else 'bg-white'
+        
+        comentario_html = ""
+        if equipo.get('comentario'):
+             comentario_html = f"<br><span class='text-xs text-red-500 italic'>{equipo['comentario']}</span>"
+
         table_rows += f"""
         <tr class="{row_bg}">
             <td class="p-3 border border-slate-300 text-center">{i + 1}</td>
-            <td class="p-3 border border-slate-300">{equipo['name']}</td>
+            <td class="p-3 border border-slate-300">
+                {equipo['name']}
+                {comentario_html}
+            </td>
             <td class="p-3 border border-slate-300 text-center">{equipo['points']}</td>
             <td class="p-3 border border-slate-300 text-center">{equipo['general_points']}</td>
         </tr>"""
@@ -534,7 +542,7 @@ def _generar_tabla_clasificacion_html(ranking_ordenado):
                 </tr>
             </thead>
             <tbody>{table_rows}</tbody>
-        </table>
+        </table>pip
     </div>"""
 
 # Genera el HTML para la tabla del historial de capitanes.
@@ -574,14 +582,28 @@ def _generar_tabla_capitanes_html(datos_capitanes, team_names):
     </div>"""
 
 # Genera el HTML para la tabla de sanciones.
-def _generar_tabla_sanciones_html(sanciones_division):
-    if not any(sanciones_division.values()):
+def _generar_tabla_sanciones_html(sanciones_division, violaciones_division=None):
+    if not any(sanciones_division.values()) and not violaciones_division:
         return "<p>No hay sanciones activas o recientes en esta división.</p>"
 
     table_rows = ""
     equipos_con_sanciones = {team: players for team, players in sanciones_division.items() if any(s.get('status') != 'completed' for p in players.values() for s in p)}
 
-    if not equipos_con_sanciones:
+    # --- Sección de Alineaciones Indebidas ---
+    if violaciones_division:
+        for team_name, lista_multas in violaciones_division.items():
+            for m in lista_multas:
+                 table_rows += f"""
+                <tr class="bg-red-50">
+                    <td class="p-3 border border-slate-300 font-bold text-red-700">{team_name}</td>
+                    <td class="p-3 border border-slate-300 font-bold text-red-700">{m['jugador']}</td>
+                    <td class="p-3 border border-slate-300 font-bold text-red-700">
+                        ALINEACIÓN INDEBIDA (Jornada {m['jornada']})<br>
+                        Multa: 5€
+                    </td>
+                </tr>"""
+
+    if not equipos_con_sanciones and not violaciones_division:
         return "<p>No hay sanciones activas o recientes en esta división.</p>"
 
     sorted_teams = sorted(equipos_con_sanciones.items())
@@ -638,7 +660,7 @@ def _generar_tabla_sanciones_html(sanciones_division):
     </div>"""
 
 # Genera la página HTML completa con todos los datos y la navegación usando Tailwind CSS.
-def generar_pagina_html_completa(datos_informe, output_path):
+def generar_pagina_html_completa(datos_informe, output_path, current_matchday=None):
     contenido_html = ""
     nav_links_html = ""
 
@@ -656,7 +678,7 @@ def generar_pagina_html_completa(datos_informe, output_path):
         nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block" data-target="{id_totales}">Multas Totales {div_titulo}</a>'
 
         contenido_html += f'<div id="{id_clasificacion}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Clasificación - {div_titulo}</h2> {_generar_tabla_clasificacion_html(div_data["clasificacion"])} </div>'
-        contenido_html += f'<div id="{id_sanciones}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Sanciones Activas - {div_titulo}</h2> {_generar_tabla_sanciones_html(div_data["sanciones"])} </div>'
+        contenido_html += f'<div id="{id_sanciones}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Sanciones Activas - {div_titulo}</h2> {_generar_tabla_sanciones_html(div_data["sanciones"], div_data.get("violaciones"))} </div>'
         contenido_html += f'<div id="{id_capitanes}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Historial de Capitanes - {div_titulo}</h2> {_generar_tabla_capitanes_html(div_data["capitanes"], div_data["totales"].keys())} </div>'
         contenido_html += f'<div id="{id_totales}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Multas Totales - {div_titulo}</h2> {_generar_tabla_multas_totales_html(div_data["totales"])} </div>'
 
@@ -685,7 +707,10 @@ def generar_pagina_html_completa(datos_informe, output_path):
     <body class="bg-slate-100 text-slate-800 font-sans">
 
         <header class="bg-slate-800 text-white flex justify-between items-center p-4 shadow-lg fixed top-0 left-0 right-0 z-50">
-            <h1 class="text-xl font-bold">Informe SuperLiga</h1>
+            <div class="flex flex-col">
+                <h1 class="text-xl font-bold">Informe SuperLiga</h1>
+                {f'<span class="text-sm text-slate-300">Jornada Actual: {current_matchday}</span>' if current_matchday else ''}
+            </div>
             <button id="hamburger-btn" class="md:hidden text-2xl">☰</button>
             <nav id="navbar" class="fixed top-0 left-0 h-full w-64 bg-slate-800 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex md:w-auto md:h-auto md:bg-transparent">
                 <div class="p-4 md:flex md:items-center md:gap-2">
@@ -785,10 +810,23 @@ def _procesar_y_ordenar_clasificacion(datos_general, datos_teams, name_map={}):
     for equipo in ranking_general_list:
         nombre_equipo_api = equipo['name']
         nombre_equipo_canonico = name_map.get(nombre_equipo_api, nombre_equipo_api)
+        
+        puntos_general = puntos_generales_dict.get(nombre_equipo_canonico, 0)
+        comentario = ""
+
+        # Ajustes manuales de puntos
+        if nombre_equipo_canonico == "EL CHOLISMO FC":
+            puntos_general -= 3
+            comentario = "Sanción: -3 puntos"
+        elif nombre_equipo_canonico == "LA MARRANERA":
+            puntos_general += 3
+            comentario = "Ajuste por sanción a rival: +3 puntos"
+
         equipos_para_ordenar.append({
             'name': nombre_equipo_canonico,
             'points': equipo['points'],
-            'general_points': puntos_generales_dict.get(nombre_equipo_canonico, 0)
+            'general_points': puntos_general,
+            'comentario': comentario
         })
     return sorted(equipos_para_ordenar, key=lambda x: (x['points'], x['general_points']), reverse=True)
 
@@ -1099,7 +1137,7 @@ def subir_informe_a_github(ruta_archivo_html, GITHUB_TOKEN, GITHUB_USERNAME, GIT
             return
         mensaje_commit = f"Informe actualizado automáticamente - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         subprocess.run(["git", "commit", "-m", mensaje_commit], check=True, capture_output=True, text=True)
-        subprocess.run(["git", "push", remote_url], check=True, capture_output=True, text=True)
+        subprocess.run(["git", "push", "--force", remote_url], check=True, capture_output=True, text=True)
         print(f"✅ Informe '{ruta_archivo_html}' subido a GitHub con éxito.")
     except FileNotFoundError:
         print("❌ Error: Git no está instalado o no se encuentra en el PATH del sistema.")
@@ -1140,6 +1178,7 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--auto':
         modo = 'local_auto'
         force_email = True
+        subprocess.run(["git", "pull", "origin", "main", "--rebase"], check=True, capture_output=True, text=True)
         print("Modo automático detectado. Actualizando localmente y forzando envío de email.")
     else:
         modo = choose_save_option()
@@ -1147,6 +1186,8 @@ def main():
     if not modo:
         print("No se seleccionó ninguna opción. Finalizando el script.")
         return
+
+    
 
     sanciones_iniciales = cargar_sanciones(SANCIONES_FILE)
 
@@ -1296,18 +1337,21 @@ def main():
             "totales": totales_1a,
             "clasificacion": clasificacion_1a,
             "capitanes": capitanes_1a,
-            "sanciones": sanciones_1a
+            "sanciones": sanciones_1a,
+            "violaciones": violaciones_1a
         },
         "segunda": {
             "jornadas": datos_jornadas_2a,
             "totales": totales_2a,
             "clasificacion": clasificacion_2a,
             "capitanes": capitanes_2a,
-            "sanciones": sanciones_2a
+            "sanciones": sanciones_2a,
+            "violaciones": violaciones_2a
         }
     }
 
-    generar_pagina_html_completa(datos_informe_completo, "index.html")
+    current_matchday = max(max(rounds_map_1a.keys(), default=0), max(rounds_map_2a.keys(), default=0))
+    generar_pagina_html_completa(datos_informe_completo, "index.html", current_matchday)
 
     if all([GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO]):
         subir_informe_a_github("index.html", GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO)
