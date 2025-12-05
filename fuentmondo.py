@@ -28,6 +28,7 @@ AUTHORITY = 'https://login.microsoftonline.com/common/'
 SCOPES = ['Files.ReadWrite.All']
 ONEDRIVE_SHARE_LINK = "https://1drv.ms/x/s!AidvQapyuNp6jBKR5uMUCaBYdLl0?e=3kXyKW"
 SANCIONES_FILE = "sanciones.json"
+VIOLACIONES_FILE = "violaciones.json"
 
 # Muestra un menú en la terminal para que el usuario elija el modo de ejecución.
 def choose_save_option():
@@ -320,6 +321,25 @@ def guardar_sanciones(datos, ruta_archivo):
         print(f"Archivo de sanciones guardado en '{ruta_archivo}'.")
     except Exception as e:
         print(f"Error al guardar el archivo de sanciones: {e}")
+
+# Carga el archivo de violaciones o devuelve una estructura vacía si no existe.
+def cargar_violaciones(ruta_archivo):
+    if not os.path.exists(ruta_archivo):
+        return {"primera": {}, "segunda": {}}
+    try:
+        with open(ruta_archivo, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"primera": {}, "segunda": {}}
+
+# Guarda el estado actual de las violaciones en un archivo JSON.
+def guardar_violaciones(datos, ruta_archivo):
+    try:
+        with open(ruta_archivo, 'w', encoding='utf-8') as f:
+            json.dump(datos, f, indent=4, ensure_ascii=False)
+        print(f"Archivo de violaciones guardado en '{ruta_archivo}'.")
+    except Exception as e:
+        print(f"Error al guardar el archivo de violaciones: {e}")
 
 # Envía un correo con *todas* las sanciones activas y añade CC en Lunes/Viernes.
 def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None):
@@ -1174,6 +1194,20 @@ def main():
     }
     
     force_email = False
+    
+    # Comprobar flag --email para envío directo
+    if len(sys.argv) > 1 and sys.argv[1] == '--email':
+        print("Modo 'Solo Email' detectado.")
+        sanciones_cargadas = cargar_sanciones(SANCIONES_FILE)
+        violaciones_cargadas = cargar_violaciones(VIOLACIONES_FILE)
+        
+        if not any(sanciones_cargadas.values()) and not any(violaciones_cargadas.values()):
+             print("No hay datos de sanciones o violaciones guardados para enviar.")
+             return
+
+        enviar_correo_sanciones(sanciones_cargadas, violaciones_cargadas)
+        return
+
     # Comprueba si se pasó el argumento --auto para ejecución automática
     if len(sys.argv) > 1 and sys.argv[1] == '--auto':
         modo = 'local_auto'
@@ -1307,6 +1341,7 @@ def main():
     sanciones_finales = {"primera": sanciones_1a, "segunda": sanciones_2a}
     violaciones_totales = {"primera": violaciones_1a, "segunda": violaciones_2a}
     guardar_sanciones(sanciones_finales, SANCIONES_FILE)
+    guardar_violaciones(violaciones_totales, VIOLACIONES_FILE)
 
     if force_email:
         print("\nModo automático: Enviando informe de sanciones...")
