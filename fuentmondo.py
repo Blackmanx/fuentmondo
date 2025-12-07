@@ -349,7 +349,7 @@ def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None)
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
     EMAIL_RECIPIENT = os.getenv("EMAIL_RECIPIENT")
     # Nueva variable de entorno para destinatarios en copia
-    EMAIL_RECIPIENTS_CC = os.getenv("EMAIL_RECIPIENTS_CC")
+    EMAIL_RECIPIENTS_CC = os.getenv("EMAIL_RECIPIENTS_CC") or os.getenv("EMAIL_RECIPIENT_CC")
 
     if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD, EMAIL_RECIPIENT]):
         print("Faltan variables de entorno para el envío de correo. No se enviará la notificación.")
@@ -413,6 +413,7 @@ def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None)
         print("No se detectaron sanciones activas. No se enviará correo.")
         return
 
+    cuerpo_mensaje += "\n\nInfo completa en blackmanx.github.io/fuentmondo"
     msg = MIMEMultipart()
     msg['From'] = EMAIL_USER
     msg['To'] = EMAIL_RECIPIENT
@@ -538,31 +539,31 @@ def _generar_tabla_clasificacion_html(ranking_ordenado):
         
         comentario_html = ""
         if equipo.get('comentario'):
-             comentario_html = f"<br><span class='text-xs text-red-500 italic'>{equipo['comentario']}</span>"
+             comentario_html = f"<div class='mt-1 text-xs text-red-600 font-semibold italic'>{equipo['comentario']}</div>"
 
         table_rows += f"""
         <tr class="{row_bg}">
             <td class="p-3 border border-slate-300 text-center">{i + 1}</td>
             <td class="p-3 border border-slate-300">
-                {equipo['name']}
+                <div class="font-medium">{equipo['name']}</div>
                 {comentario_html}
             </td>
-            <td class="p-3 border border-slate-300 text-center">{equipo['points']}</td>
-            <td class="p-3 border border-slate-300 text-center">{equipo['general_points']}</td>
+            <td class="p-3 border border-slate-300 text-center font-bold">{equipo['points']}</td>
+            <td class="p-3 border border-slate-300 text-center text-slate-500">{equipo['general_points']}</td>
         </tr>"""
     return f"""
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead class="bg-slate-200">
+    <div class="overflow-x-auto rounded-lg shadow-sm">
+        <table class="w-full text-left border-collapse min-w-[600px]">
+            <thead class="bg-slate-200 text-slate-700">
                 <tr>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300 text-center">Pos.</th>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300">Equipo</th>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300 text-center">Puntos (J)</th>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300 text-center">Puntos (G)</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300 text-center w-12">Pos.</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300">Equipo</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300 text-center w-24">Puntos (J)</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300 text-center w-24">Puntos (G)</th>
                 </tr>
             </thead>
             <tbody>{table_rows}</tbody>
-        </table>pip
+        </table>
     </div>"""
 
 # Genera el HTML para la tabla del historial de capitanes.
@@ -666,13 +667,52 @@ def _generar_tabla_sanciones_html(sanciones_division, violaciones_division=None)
         return "<p>No hay sanciones activas o recientes en esta división.</p>"
 
     return f"""
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead class="bg-slate-200">
+    <div class="overflow-x-auto rounded-lg shadow-sm">
+        <table class="w-full text-left border-collapse min-w-[600px]">
+            <thead class="bg-slate-200 text-slate-700">
                 <tr>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300">Equipo</th>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300">Jugador</th>
-                    <th class="p-3 font-bold uppercase text-slate-600 border border-slate-300">Estado de la Sanción</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300">Equipo</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300">Jugador</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-slate-300">Estado de la Sanción</th>
+                </tr>
+            </thead>
+            <tbody>{table_rows}</tbody>
+        </table>
+    </div>"""
+
+# Genera el HTML para la tabla de historial de alineaciones indebidas.
+def _generar_tabla_violaciones_html(violaciones_division):
+    if not violaciones_division:
+        return "<p class='text-slate-500 italic'>No hay alineaciones indebidas registradas.</p>"
+
+    table_rows = ""
+    # Aplanar la estructura: lista de (team, violacion)
+    lista_plana = []
+    for team_name, lista_multas in violaciones_division.items():
+        for m in lista_multas:
+            lista_plana.append({'team': team_name, **m})
+    
+    # Ordenar por jornada descendente
+    lista_plana.sort(key=lambda x: x['jornada'], reverse=True)
+
+    for item in lista_plana:
+        table_rows += f"""
+        <tr class="bg-red-50 hover:bg-red-100 transition-colors">
+            <td class="p-3 border border-red-200 font-bold text-red-800 text-center">{item['jornada']}</td>
+            <td class="p-3 border border-red-200 font-bold text-red-800">{item['team']}</td>
+            <td class="p-3 border border-red-200 text-red-700">{item['jugador']}</td>
+            <td class="p-3 border border-red-200 text-red-700 text-center font-mono font-bold">5.00€</td>
+        </tr>"""
+
+    return f"""
+    <div class="overflow-x-auto rounded-lg shadow-sm border border-red-200">
+        <table class="w-full text-left border-collapse min-w-[600px]">
+            <thead class="bg-red-100 text-red-800">
+                <tr>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-red-200 text-center w-20">Jornada</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-red-200">Equipo</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-red-200">Jugador</th>
+                    <th class="p-3 font-bold uppercase text-xs tracking-wider border border-red-200 text-center w-24">Multa</th>
                 </tr>
             </thead>
             <tbody>{table_rows}</tbody>
@@ -689,29 +729,32 @@ def generar_pagina_html_completa(datos_informe, output_path, current_matchday=No
 
         id_clasificacion = f"{div_key}-clasificacion"
         id_sanciones = f"{div_key}-sanciones"
+        id_violaciones = f"{div_key}-violaciones"
         id_capitanes = f"{div_key}-capitanes"
         id_totales = f"{div_key}-totales"
 
-        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block" data-target="{id_clasificacion}">Clasificación {div_titulo}</a>'
-        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block" data-target="{id_sanciones}">Sanciones {div_titulo}</a>'
-        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block" data-target="{id_capitanes}">Capitanes {div_titulo}</a>'
-        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block" data-target="{id_totales}">Multas Totales {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_clasificacion}">Clasificación {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_sanciones}">Sanciones {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_violaciones}">Alineaciones Indebidas {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_capitanes}">Capitanes {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_totales}">Multas Totales {div_titulo}</a>'
 
-        contenido_html += f'<div id="{id_clasificacion}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Clasificación - {div_titulo}</h2> {_generar_tabla_clasificacion_html(div_data["clasificacion"])} </div>'
-        contenido_html += f'<div id="{id_sanciones}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Sanciones Activas - {div_titulo}</h2> {_generar_tabla_sanciones_html(div_data["sanciones"], div_data.get("violaciones"))} </div>'
-        contenido_html += f'<div id="{id_capitanes}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Historial de Capitanes - {div_titulo}</h2> {_generar_tabla_capitanes_html(div_data["capitanes"], div_data["totales"].keys())} </div>'
-        contenido_html += f'<div id="{id_totales}" class="content-section p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Multas Totales - {div_titulo}</h2> {_generar_tabla_multas_totales_html(div_data["totales"])} </div>'
+        contenido_html += f'<div id="{id_clasificacion}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Clasificación - {div_titulo}</h2> {_generar_tabla_clasificacion_html(div_data["clasificacion"])} </div>'
+        contenido_html += f'<div id="{id_sanciones}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Sanciones Activas - {div_titulo}</h2> {_generar_tabla_sanciones_html(div_data["sanciones"])} </div>'
+        contenido_html += f'<div id="{id_violaciones}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-red-700 border-b-2 border-red-500 pb-3 mb-6">Historial Alineaciones Indebidas - {div_titulo}</h2> {_generar_tabla_violaciones_html(div_data.get("violaciones_historico"))} </div>'
+        contenido_html += f'<div id="{id_capitanes}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Historial de Capitanes - {div_titulo}</h2> {_generar_tabla_capitanes_html(div_data["capitanes"], div_data["totales"].keys())} </div>'
+        contenido_html += f'<div id="{id_totales}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Multas Totales - {div_titulo}</h2> {_generar_tabla_multas_totales_html(div_data["totales"])} </div>'
 
         nav_links_html += '<div class="relative dropdown-container">'
-        nav_links_html += f'<button class="dropdown-btn block w-full text-left px-4 py-2 text-white hover:bg-slate-700 md:inline-block md:w-auto">Multas Jornada ({div_titulo}) &#9662;</button>'
-        nav_links_html += '<div class="dropdown-content hidden md:absolute bg-white text-black rounded-md shadow-lg mt-2 py-1 z-20">'
+        nav_links_html += f'<button class="dropdown-btn block w-full text-left px-4 py-2 text-white hover:bg-slate-700 md:inline-block md:w-auto rounded-md transition-colors">Multas Jornada ({div_titulo}) &#9662;</button>'
+        nav_links_html += '<div class="dropdown-content hidden md:absolute bg-white text-black rounded-md shadow-lg mt-2 py-1 z-20 w-full md:w-48 max-h-64 overflow-y-auto">'
 
         sorted_jornadas = sorted(div_data['jornadas'], key=lambda x: x['numero'])
         for jornada_data in sorted_jornadas:
             jornada_num = jornada_data['numero']
             id_jornada = f"{div_key}-jornada-{jornada_num}"
-            contenido_html += f'<div id="{id_jornada}" class="content-section hidden p-6 bg-white rounded-lg shadow-md"> <h2 class="text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Multas Jornada {jornada_num} - {div_titulo}</h2> {_generar_tabla_multas_jornada_html(jornada_data["multas"])} </div>'
-            nav_links_html += f'<a href="#" class="block px-4 py-2 hover:bg-slate-100" data-target="{id_jornada}">Jornada {jornada_num}</a>'
+            contenido_html += f'<div id="{id_jornada}" class="content-section hidden p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Multas Jornada {jornada_num} - {div_titulo}</h2> {_generar_tabla_multas_jornada_html(jornada_data["multas"])} </div>'
+            nav_links_html += f'<a href="#" class="block px-4 py-2 hover:bg-slate-100 text-sm" data-target="{id_jornada}">Jornada {jornada_num}</a>'
 
         nav_links_html += '</div></div>'
 
@@ -832,19 +875,20 @@ def _procesar_y_ordenar_clasificacion(datos_general, datos_teams, name_map={}):
         nombre_equipo_canonico = name_map.get(nombre_equipo_api, nombre_equipo_api)
         
         puntos_general = puntos_generales_dict.get(nombre_equipo_canonico, 0)
+        puntos_jornada = equipo['points']
         comentario = ""
 
         # Ajustes manuales de puntos
         if nombre_equipo_canonico == "EL CHOLISMO FC":
-            puntos_general -= 3
+            puntos_jornada -= 3
             comentario = "Sanción: -3 puntos"
         elif nombre_equipo_canonico == "LA MARRANERA":
-            puntos_general += 3
+            puntos_jornada += 3
             comentario = "Ajuste por sanción a rival: +3 puntos"
 
         equipos_para_ordenar.append({
             'name': nombre_equipo_canonico,
-            'points': equipo['points'],
+            'points': puntos_jornada,
             'general_points': puntos_general,
             'comentario': comentario
         })
@@ -1212,7 +1256,6 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == '--auto':
         modo = 'local_auto'
         force_email = True
-        subprocess.run(["git", "pull", "origin", "main", "--rebase"], check=True, capture_output=True, text=True)
         print("Modo automático detectado. Actualizando localmente y forzando envío de email.")
     else:
         modo = choose_save_option()
@@ -1373,7 +1416,8 @@ def main():
             "clasificacion": clasificacion_1a,
             "capitanes": capitanes_1a,
             "sanciones": sanciones_1a,
-            "violaciones": violaciones_1a
+            "violaciones": violaciones_1a,
+            "violaciones_historico": violaciones_totales["primera"]
         },
         "segunda": {
             "jornadas": datos_jornadas_2a,
@@ -1381,7 +1425,8 @@ def main():
             "clasificacion": clasificacion_2a,
             "capitanes": capitanes_2a,
             "sanciones": sanciones_2a,
-            "violaciones": violaciones_2a
+            "violaciones": violaciones_2a,
+            "violaciones_historico": violaciones_totales["segunda"]
         }
     }
 

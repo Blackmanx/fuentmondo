@@ -1,0 +1,27 @@
+{
+    "primera": {
+        "EL CHOLISMO FC": [
+            {
+                "jornada": 10,
+                "jugador": "Eyong",
+                "multa": 5.0
+            }
+        ]
+    },
+    "segunda": {
+        "SICARIOS CF": [
+            {
+                "jornada": 6,
+                "jugador": "Ferrán Torres ",
+                "multa": 5.0
+            }
+        ],
+        "Minabo De Kiev": [
+            {
+                "jornada": 11,
+                "jugador": "Carlos Vicente",
+                "multa": 5.0
+            }
+        ]
+    }
+}
