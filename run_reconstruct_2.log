@@ -1,0 +1,118 @@
+Loading .env environment 
+variables...
+Modo automático detectado. Actualizando localmente y forzando envío de email.
+
+--- OBTENIENDO DATOS DE FUTMONDO ---
+  [+] Nuevo equipo detectado en primera: LA MARRANERA (Index: 1)
+  [+] Nuevo equipo detectado en primera: QUE BARBARIDAD FC (Index: 2)
+  [+] Nuevo equipo detectado en primera: SICARIOS CF (Index: 3)
+  [+] Nuevo equipo detectado en primera: Larios Limon FC (Index: 4)
+  [+] Nuevo equipo detectado en primera: PANAKOTA F.F. (Index: 5)
+  [+] Nuevo equipo detectado en primera: Fuentino Pérez (Index: 6)
+  [+] Nuevo equipo detectado en primera: Poli Ejido CF (Index: 7)
+  [+] Nuevo equipo detectado en primera: Huevos bailarines F.C (Index: 8)
+  [+] Nuevo equipo detectado en primera: Cangrena F.C. (Index: 9)
+  [+] Nuevo equipo detectado en primera: CD Congelados (Index: 10)
+  [+] Nuevo equipo detectado en primera: Juaki la bomba (Index: 11)
+  [+] Nuevo equipo detectado en primera: El Huracán CF (Index: 12)
+  [+] Nuevo equipo detectado en primera: Real Pezqueñines FC (Index: 13)
+  [+] Nuevo equipo detectado en primera: Galácticos de la noche FC (Index: 14)
+  [+] Nuevo equipo detectado en primera: Samba Rovinha 🇧🇷 (Index: 15)
+  [+] Nuevo equipo detectado en primera: Real Fermín C.F. (Index: 16)
+  [+] Nuevo equipo detectado en primera: THE LIONS (Index: 17)
+  [+] Nuevo equipo detectado en primera: BANANEROS FC (Index: 18)
+  [+] Nuevo equipo detectado en primera: CALAMARES CON TORRIJAS🦑🍞 (Index: 19)
+  [+] Nuevo equipo detectado en primera: AL-CARRER F.C. (Index: 20)
+  [+] Nuevo equipo detectado en segunda: ElBarto F.C (Index: 1)
+  [+] Nuevo equipo detectado en segunda: Todo por la camiseta 🇪🇸 (Index: 2)
+  [+] Nuevo equipo detectado en segunda: Pollos sin cabeza 🐥🧄 (Index: 3)
+  [+] Nuevo equipo detectado en segunda: parker f.c. (Index: 4)
+  [+] Nuevo equipo detectado en segunda: Lazaroneta (Index: 5)
+  [+] Nuevo equipo detectado en segunda: Real Pescados el Puerto Fc (Index: 6)
+  [+] Nuevo equipo detectado en segunda: Minabo De Kiev (Index: 7)
+  [+] Nuevo equipo detectado en segunda: Motobetis a primera! (Index: 8)
+  [+] Nuevo equipo detectado en segunda: Osasuna N.S.R (Index: 9)
+  [+] Nuevo equipo detectado en segunda: Charo la  Picanta FC (Index: 10)
+  [+] Nuevo equipo detectado en segunda: Kostas Mariotas (Index: 11)
+  [+] Nuevo equipo detectado en segunda: Banano Vallekano 🍌⚡ (Index: 12)
+  [+] Nuevo equipo detectado en segunda: MORRITOS F.C. (Index: 13)
+  [+] Nuevo equipo detectado en segunda: SANTA LUCIA FC (Index: 14)
+  [+] Nuevo equipo detectado en segunda: EL CHOLISMO FC (Index: 15)
+  [+] Nuevo equipo detectado en segunda: Morenetes de la Giralda 🍩 (Index: 16)
+  [+] Nuevo equipo detectado en segunda: Patejas (Index: 17)
+  [+] Nuevo equipo detectado en segunda: Jamon York F.C. (Index: 18)
+  [+] Nuevo equipo detectado en segunda: Tetitas Colesterol . F.C (Index: 19)
+  [+] Nuevo equipo detectado en segunda: MTB Drink Team (Index: 20)
+  [+] Nuevo equipo detectado en segunda: Elche pero Peor (Index: 21)
+  [+] Nuevo equipo detectado en segunda: Molinardo fc (Index: 22)
+  [+] Nuevo equipo detectado en segunda: Team pepino (Index: 23)
+  [+] Nuevo equipo detectado en segunda: LOS POKÉMON 🟡🐭🟡 (Index: 24)
+Archivo de equipos guardado en 'teams.json'.
+
+--- PROCESANDO ARCHIVO EXCEL ---
+⚠️ Aviso: No se encontró el archivo Excel 'SuperLiga Fuentmondo 25-26.xlsx'. Saltando actualización local.
+
+--- RECOPILANDO DATOS DE MULTAS PARA PRIMERA ---
+Jornada 1: |----------------------------------------| 0.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 2: |██--------------------------------------| 5.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 3: |████------------------------------------| 10.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 4: |██████----------------------------------| 15.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 5: |████████--------------------------------| 20.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 6: |██████████------------------------------| 25.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 7: |████████████----------------------------| 30.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 8: |██████████████--------------------------| 35.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 9: |████████████████------------------------| 40.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 10: |██████████████████----------------------| 45.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 11: |████████████████████--------------------| 50.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 12: |██████████████████████------------------| 55.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 13: |████████████████████████----------------| 60.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 14: |██████████████████████████--------------| 65.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 15: |████████████████████████████------------| 70.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 16: |██████████████████████████████----------| 75.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 17: |████████████████████████████████--------| 80.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 18: |██████████████████████████████████------| 85.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 19: |████████████████████████████████████----| 90.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 20: |██████████████████████████████████████--| 95.0% CompletadoRespuesta de la API guardada en 'resultados/jornada_20_primera.json'.
+Finalizado: |████████████████████████████████████████| 100.0% Completado
+
+--- RECOPILANDO DATOS DE MULTAS PARA SEGUNDA ---
+Jornada 1: |----------------------------------------| 0.0% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 2: |██--------------------------------------| 5.3% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 3: |████------------------------------------| 10.5% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 4: |██████----------------------------------| 15.8% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 5: |████████--------------------------------| 21.1% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 6: |██████████------------------------------| 26.3% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 7: |████████████----------------------------| 31.6% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 8: |██████████████--------------------------| 36.8% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 9: |████████████████------------------------| 42.1% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 10: |██████████████████----------------------| 47.4% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 11: |█████████████████████-------------------| 52.6% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 12: |███████████████████████-----------------| 57.9% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 13: |█████████████████████████---------------| 63.2% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 14: |███████████████████████████-------------| 68.4% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 15: |█████████████████████████████-----------| 73.7% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 16: |███████████████████████████████---------| 78.9% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 17: |█████████████████████████████████-------| 84.2% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 18: |███████████████████████████████████-----| 89.5% CompletadoError: Respuesta de API de ronda inválida.
+Jornada 19: |█████████████████████████████████████---| 94.7% CompletadoError: Respuesta de API de ronda inválida.
+Finalizado: |████████████████████████████████████████| 100.0% Completado
+
+--- PROCESANDO SANCIONES Y CAPITANES PARA PRIMERA ---
+Obteniendo datos históricos de todas las jornadas para análisis...
+Jornada 1: |----------------------------------------| 0.0% Analizando...Jornada 2: |██--------------------------------------| 5.0% Analizando...Jornada 3: |████------------------------------------| 10.0% Analizando...Jornada 4: |██████----------------------------------| 15.0% Analizando...Jornada 5: |████████--------------------------------| 20.0% Analizando...Jornada 6: |██████████------------------------------| 25.0% Analizando...Jornada 7: |████████████----------------------------| 30.0% Analizando...Jornada 8: |██████████████--------------------------| 35.0% Analizando...Jornada 9: |████████████████------------------------| 40.0% Analizando...Jornada 10: |██████████████████----------------------| 45.0% Analizando...Jornada 11: |████████████████████--------------------| 50.0% Analizando...Jornada 12: |██████████████████████------------------| 55.0% Analizando...Jornada 13: |████████████████████████----------------| 60.0% Analizando...Jornada 14: |██████████████████████████--------------| 65.0% Analizando...Jornada 15: |████████████████████████████------------| 70.0% Analizando...Jornada 16: |██████████████████████████████----------| 75.0% Analizando...Jornada 17: |████████████████████████████████--------| 80.0% Analizando...Jornada 18: |██████████████████████████████████------| 85.0% Analizando...Jornada 19: |████████████████████████████████████----| 90.0% Analizando...Jornada 20: |██████████████████████████████████████--| 95.0% Analizando...Finalizado: |████████████████████████████████████████| 100.0% Análisis completo
+
+--- PROCESANDO SANCIONES Y CAPITANES PARA SEGUNDA ---
+Obteniendo datos históricos de todas las jornadas para análisis...
+Jornada 1: |----------------------------------------| 0.0% Analizando...Jornada 2: |██--------------------------------------| 5.3% Analizando...Jornada 3: |████------------------------------------| 10.5% Analizando...Jornada 4: |██████----------------------------------| 15.8% Analizando...Jornada 5: |████████--------------------------------| 21.1% Analizando...Jornada 6: |██████████------------------------------| 26.3% Analizando...Jornada 7: |████████████----------------------------| 31.6% Analizando...Jornada 8: |██████████████--------------------------| 36.8% Analizando...Jornada 9: |████████████████------------------------| 42.1% Analizando...Jornada 10: |██████████████████----------------------| 47.4% Analizando...Jornada 11: |█████████████████████-------------------| 52.6% Analizando...Jornada 12: |███████████████████████-----------------| 57.9% Analizando...Jornada 13: |█████████████████████████---------------| 63.2% Analizando...Jornada 14: |███████████████████████████-------------| 68.4% Analizando...Jornada 15: |█████████████████████████████-----------| 73.7% Analizando...Jornada 16: |███████████████████████████████---------| 78.9% Analizando...Jornada 17: |█████████████████████████████████-------| 84.2% Analizando...Jornada 18: |███████████████████████████████████-----| 89.5% Analizando...Jornada 19: |█████████████████████████████████████---| 94.7% Analizando...Finalizado: |████████████████████████████████████████| 100.0% Análisis completo
+Archivo de sanciones guardado en 'sanciones.json'.
+Archivo de violaciones guardado en 'violaciones.json'.
+
+Modo automático: Enviando informe de sanciones (siempre habilitado)...
+Hoy es martes o viernes. Añadiendo destinatarios en CC: velsi13fuentes@gmail.com,velsi12torres@gmail.com
+Correo de informe de sanciones enviado a 'velsi12blackman@gmail.com' (y a destinatarios en copia: velsi13fuentes@gmail.com,velsi12torres@gmail.com).
+Informe HTML (Tailwind CSS) completo guardado en 'index.html'.
+
+--- INTENTANDO SUBIR INFORME A GITHUB ---
+✅ Informe 'index.html' subido a GitHub con éxito.
+
+--- Proceso completado. ---

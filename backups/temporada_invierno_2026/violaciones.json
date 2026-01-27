@@ -1,0 +1,70 @@
+{
+    "primera": {
+        "EL CHOLISMO FC": [
+            {
+                "jornada": 10,
+                "jugador": "Eyong",
+                "multa": 5.0
+            },
+            {
+                "jornada": 19,
+                "jugador": "Raphinha",
+                "multa": 5.0
+            }
+        ],
+        "Lim Hijo de Puta": [
+            {
+                "jornada": 16,
+                "jugador": "Güler",
+                "multa": 5.0
+            }
+        ]
+    },
+    "segunda": {
+        "Charo la   Picanta FC": [
+            {
+                "jornada": 19,
+                "jugador": "Lewandowski",
+                "multa": 5.0
+            }
+        ],
+        "SICARIOS CF": [
+            {
+                "jornada": 6,
+                "jugador": "Ferrán Torres ",
+                "multa": 5.0
+            }
+        ],
+        "Minabo De Kiev": [
+            {
+                "jornada": 11,
+                "jugador": "Carlos Vicente",
+                "multa": 5.0
+            },
+            {
+                "jornada": 18,
+                "jugador": "Rodrygo",
+                "multa": 5.0
+            }
+        ],
+        "BANANEROS FC": [
+            {
+                "jornada": 19,
+                "jugador": "Mbappé",
+                "multa": 5.0
+            }
+        ],
+        "Morenetes de la Giralda 🍩": [
+            {
+                "jornada": 16,
+                "jugador": "André Silva",
+                "multa": 5.0
+            },
+            {
+                "jornada": 19,
+                "jugador": "Mbappé",
+                "multa": 5.0
+            }
+        ]
+    }
+}

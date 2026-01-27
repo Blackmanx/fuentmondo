@@ -27,3 +27,7 @@ respuesta_general_Clasificación_1a_DIV.json
 respuesta_general_Clasificación_2a_DIV.json
 respuesta_teams_Clasificación_1a_DIV.json
 respuesta_teams_Clasificación_2a_DIV.json
+
+# Cache y archivos compilados de Python
+__pycache__/
+.cache/

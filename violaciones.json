@@ -1,27 +1,12 @@
 {
     "primera": {
-        "EL CHOLISMO FC": [
+        "Galácticos de la noche FC": [
             {
-                "jornada": 10,
-                "jugador": "Eyong",
+                "jornada": 20,
+                "jugador": "Gerard Moreno",
                 "multa": 5.0
             }
         ]
     },
-    "segunda": {
-        "SICARIOS CF": [
-            {
-                "jornada": 6,
-                "jugador": "Ferrán Torres ",
-                "multa": 5.0
-            }
-        ],
-        "Minabo De Kiev": [
-            {
-                "jornada": 11,
-                "jugador": "Carlos Vicente",
-                "multa": 5.0
-            }
-        ]
-    }
+    "segunda": {}
 }

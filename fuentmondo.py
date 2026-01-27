@@ -1,5 +1,7 @@
 from datetime import datetime
+import re
 import subprocess
+import hashlib
 import requests
 import json
 import copy
@@ -29,6 +31,12 @@ SCOPES = ['Files.ReadWrite.All']
 ONEDRIVE_SHARE_LINK = "https://1drv.ms/x/s!AidvQapyuNp6jBKR5uMUCaBYdLl0?e=3kXyKW"
 SANCIONES_FILE = "sanciones.json"
 VIOLACIONES_FILE = "violaciones.json"
+TEAMS_FILE = "teams.json"
+
+# Globales para control de caché
+FORCE_REFRESH = False
+FORCED_ROUND_IDS = set()
+
 
 # Muestra un menú en la terminal para que el usuario elija el modo de ejecución.
 def choose_save_option():
@@ -36,17 +44,28 @@ def choose_save_option():
     print("1. Actualizar Excel en OneDrive")
     print("2. Actualizar Excel Localmente")
     print("3. Generar Solo Informe (HTML)")
-    
+    print("4. [Opcional] Forzar Refresco de Datos (Ignorar Caché)")
+
+    force_refresh = False
     while True:
-        choice = input("\nElige una opción (1-3): ").strip()
+        choice = input("\nElige una opción (1-4): ").strip()
+        if choice == '4':
+            force_refresh = True
+            print(">>> Caché desactivada para esta ejecución. <<<")
+            print("\nAhora elige el modo de guardado:")
+            print("1. Actualizar Excel en OneDrive")
+            print("2. Actualizar Excel Localmente")
+            print("3. Generar Solo Informe (HTML)")
+            continue
+
         if choice == '1':
-            return 'onedrive'
+            return 'onedrive', force_refresh
         elif choice == '2':
-            return 'local'
+            return 'local', force_refresh
         elif choice == '3':
-            return 'multas_only'
+            return 'multas_only', force_refresh
         else:
-            print("Opción no válida. Por favor, introduce 1, 2 o 3.")
+            print("Opción no válida. Por favor, introduce 1, 2, 3 o 4.")
 
 # Muestra el código de autenticación en la terminal.
 def show_auth_code_window(message, verification_uri):
@@ -61,10 +80,10 @@ def show_auth_code_window(message, verification_uri):
     print(f"1. Copia este código: {user_code}")
     print(f"2. Abre esta URL en tu navegador: {verification_uri}")
     print("="*60)
-    
+
     pyperclip.copy(user_code)
     print("(El código ha sido copiado al portapapeles automáticamente)")
-    
+
     webbrowser.open(verification_uri)
     input("\nPresiona Enter después de haberte autenticado en el navegador...")
 
@@ -145,7 +164,7 @@ def cargar_payload(ruta_archivo):
         return None
 
 # Realiza una llamada POST a una API con un payload JSON.
-def llamar_api(url, payload):
+def _llamar_api_raw(url, payload):
     if not payload: return None
     try:
         response = requests.post(url, json=payload)
@@ -154,6 +173,65 @@ def llamar_api(url, payload):
     except requests.exceptions.RequestException as e:
         print(f"Error en la llamada a la API '{url}': {e}")
         return None
+
+def llamar_api(url, payload, use_cache=True, force_refresh=None):
+    if force_refresh is None:
+        force_refresh = FORCE_REFRESH
+
+    # Forzar refresco para jornadas marcadas (última o especiales) o metadatos críticos
+    if not force_refresh and use_cache:
+        rid = payload.get('query', {}).get('round') or payload.get('query', {}).get('roundNumber')
+        if rid and rid in FORCED_ROUND_IDS:
+            force_refresh = True
+        elif any(endpoint in url for endpoint in ["/ranking/general", "/userteam/rounds"]):
+            # Forzar también rankings generales y lista de rondas para detectar cambios
+            force_refresh = True
+
+    if not use_cache:
+        return _llamar_api_raw(url, payload)
+
+    # Crear identificador único para la petición
+    payload_str = json.dumps(payload, sort_keys=True)
+    query_hash = hashlib.md5(f"{url}{payload_str}".encode()).hexdigest()
+    cache_dir = ".cache"
+    cache_file = os.path.join(cache_dir, f"{query_hash}.json")
+
+    # El cache expira tras 10 minutos
+    CACHE_EXPIRATION = 600
+
+    if not force_refresh and os.path.exists(cache_file):
+        try:
+            mtime = os.path.getmtime(cache_file)
+            if time.time() - mtime < CACHE_EXPIRATION:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    time.sleep(0.01) # Pequeño retardo para visibilidad
+                    return json.load(f)
+        except Exception:
+            pass
+
+    # Si no está en caché, ha expirado, o se fuerza el refresco, llamar a la API
+    data = _llamar_api_raw(url, payload)
+
+    if data and 'answer' in data and data['answer'] != 'api.error.general':
+        try:
+            os.makedirs(cache_dir, exist_ok=True)
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+        except Exception as e:
+            print(f"Error al guardar cache: {e}")
+
+    return data
+
+def print_progress(current, total, prefix='', suffix='', decimals=1, length=50, fill='█', print_end="\r"):
+    if total == 0:
+        print(f"{prefix} No hay elementos para procesar. {suffix}")
+        return
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (current / float(total)))
+    filled_length = int(length * current // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=print_end)
+    if current == total:
+        print()
 
 # Guarda los datos de respuesta de la API en un archivo JSON.
 def guardar_respuesta(datos, nombre_archivo):
@@ -186,6 +264,8 @@ def get_captains_for_round(payload_base, datos_ronda, name_map={}):
 
 # Obtiene la alineación de un equipo para una ronda específica.
 def get_lineup_for_round(payload_base, round_id, team_id):
+    if str(round_id).startswith("LOCAL_"):
+        return []
     API_URL_LINEUP = "https://api.futmondo.com/1/userteam/roundlineup"
     payload_lineup = {
         "header": copy.deepcopy(payload_base["header"]),
@@ -305,13 +385,16 @@ def calcular_multas_jornada(teams_in_round, matches, team_map_name, dict_alineac
 
 # Carga el archivo de sanciones o devuelve una estructura vacía si no existe.
 def cargar_sanciones(ruta_archivo):
-    if not os.path.exists(ruta_archivo):
-        return {"primera": {}, "segunda": {}}
-    try:
-        with open(ruta_archivo, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {"primera": {}, "segunda": {}}
+    data = {"primera": {}, "segunda": {}}
+    if os.path.exists(ruta_archivo):
+        try:
+            with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    data.update(loaded)
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+    return data
 
 # Guarda el estado actual de las sanciones en un archivo JSON.
 def guardar_sanciones(datos, ruta_archivo):
@@ -324,13 +407,16 @@ def guardar_sanciones(datos, ruta_archivo):
 
 # Carga el archivo de violaciones o devuelve una estructura vacía si no existe.
 def cargar_violaciones(ruta_archivo):
-    if not os.path.exists(ruta_archivo):
-        return {"primera": {}, "segunda": {}}
-    try:
-        with open(ruta_archivo, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {"primera": {}, "segunda": {}}
+    data = {"primera": {}, "segunda": {}}
+    if os.path.exists(ruta_archivo):
+        try:
+            with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    data.update(loaded)
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+    return data
 
 # Guarda el estado actual de las violaciones en un archivo JSON.
 def guardar_violaciones(datos, ruta_archivo):
@@ -341,8 +427,29 @@ def guardar_violaciones(datos, ruta_archivo):
     except Exception as e:
         print(f"Error al guardar el archivo de violaciones: {e}")
 
+# Carga el archivo de equipos o devuelve una estructura vacía si no existe.
+def cargar_equipos(ruta_archivo):
+    if os.path.exists(ruta_archivo):
+        try:
+            with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+        except Exception as e:
+            print(f"Error al cargar {ruta_archivo}: {e}")
+    return {"primera": {}, "segunda": {}}
+
+# Guarda la configuración de equipos en teams.json.
+def guardar_equipos(datos, ruta_archivo):
+    try:
+        with open(ruta_archivo, 'w', encoding='utf-8') as f:
+            json.dump(datos, f, ensure_ascii=False, indent=4)
+        print(f"Archivo de equipos guardado en '{ruta_archivo}'.")
+    except Exception as e:
+        print(f"Error al guardar el archivo de equipos: {e}")
+
 # Envía un correo con *todas* las sanciones activas y añade CC en Lunes/Viernes.
-def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None):
+def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None, force_send=False):
     EMAIL_HOST = os.getenv("EMAIL_HOST")
     EMAIL_PORT = os.getenv("EMAIL_PORT")
     EMAIL_USER = os.getenv("EMAIL_USER")
@@ -389,7 +496,7 @@ def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None)
                 elif sancion_a_mostrar['status'] == 'captain_banned':
                     jornada_fin_restriccion = sancion_a_mostrar.get('jornada_completed', 0) + 3
                     estado_str = f"Puede volver al once, pero no como capitan. Restricción hasta la Jornada {jornada_fin_restriccion}."
-                
+
                 buffer_equipo += f"{jugador}: {estado_str}\n"
 
             if equipo_con_sanciones_en_buffer:
@@ -410,8 +517,11 @@ def enviar_correo_sanciones(sanciones_por_division, violaciones_detectadas=None)
                     cuerpo_mensaje += f"- {team_name}: Alineó a {m['jugador']} en la Jornada {m['jornada']} (Sancionado).\n"
 
     if not hay_sanciones_activas:
-        print("No se detectaron sanciones activas. No se enviará correo.")
-        return
+        if force_send:
+            cuerpo_mensaje = "No se han detectado nuevas sanciones ni alineaciones indebidas en esta jornada.\n"
+        else:
+            print("No se detectaron sanciones activas. No se enviará correo.")
+            return
 
     cuerpo_mensaje += "\n\nInfo completa en blackmanx.github.io/fuentmondo"
     msg = MIMEMultipart()
@@ -475,7 +585,7 @@ def _generar_tabla_multas_jornada_html(multas_data):
         epc = desglose.get("elegir_peor_capitan", {})
         if epc.get("multa", 0) > 0:
             desglose_html += f"<li>Elegir al peor capitán: {epc.get('multa', 0):.2f}€</li>"
-        
+
         ali = desglose.get("alineacion_indebida", {})
         if ali.get("multa", 0) > 0:
             jugadores_str = ", ".join(ali.get("jugadores", []))
@@ -536,7 +646,7 @@ def _generar_tabla_clasificacion_html(ranking_ordenado):
     table_rows = ""
     for i, equipo in enumerate(ranking_ordenado):
         row_bg = 'bg-slate-50' if i % 2 != 0 else 'bg-white'
-        
+
         comentario_html = ""
         if equipo.get('comentario'):
              comentario_html = f"<div class='mt-1 text-xs text-red-600 font-semibold italic'>{equipo['comentario']}</div>"
@@ -566,39 +676,53 @@ def _generar_tabla_clasificacion_html(ranking_ordenado):
         </table>
     </div>"""
 
-# Genera el HTML para la tabla del historial de capitanes.
-def _generar_tabla_capitanes_html(datos_capitanes, team_names):
-    if not datos_capitanes: return "<p>No hay datos de capitanes disponibles.</p>"
-    sorted_jornadas = sorted(datos_capitanes.keys())
-    sorted_teams = sorted(list(team_names))
-    header_cols = "".join(f"<th class='p-3 font-bold uppercase text-slate-600 border border-slate-300 sticky top-0 bg-slate-200'>{team}</th>" for team in sorted_teams)
-    header = f"<tr><th class='p-3 font-bold uppercase text-slate-600 border border-slate-300 sticky top-0 bg-slate-200'>Jornada</th>{header_cols}</tr>"
+# Genera el HTML para la tabla de historial de capitanes.
+def _generar_tabla_capitanes_html(capitanes_por_jornada, lista_equipos, range_rounds=None):
+    if not capitanes_por_jornada:
+        return "<p class='text-slate-500 italic'>No hay datos de capitanes registrados.</p>"
 
-    body_rows = ""
-    for i, jornada_num in enumerate(sorted_jornadas):
-        capitanes_jornada = {item['team_name']: item for item in datos_capitanes[jornada_num]}
+    # Filtrar jornadas si se especifica un rango
+    all_j_nums = sorted(capitanes_por_jornada.keys(), reverse=True)
+    if range_rounds:
+        sorted_jornadas = [j for j in all_j_nums if j in range_rounds]
+    else:
+        sorted_jornadas = all_j_nums
+
+    if not sorted_jornadas:
+        return "<p class='text-slate-500 italic text-sm text-center p-4 border border-dashed border-slate-300 rounded'>Sin registros en este periodo.</p>"
+
+    # Preparar cabecera con nombres de equipos
+    # Ajuste responsive: Jornada más estrecha en móvil
+    table_header = '<th class="p-2 md:p-3 font-bold uppercase text-[9px] md:text-[10px] tracking-wider border border-slate-300 bg-slate-200 sticky left-0 z-30 w-16 md:w-24 text-center">Jornada</th>'
+    sorted_teams = sorted(list(lista_equipos))
+    for team in sorted_teams:
+        table_header += f'<th class="p-1 md:p-2 font-bold uppercase text-[9px] md:text-[10px] tracking-wider border border-slate-300 min-w-[90px] md:min-w-[120px] text-center whitespace-nowrap">{team}</th>'
+
+    table_rows = ""
+    for i, j_num in enumerate(sorted_jornadas):
         row_bg = 'bg-slate-50' if i % 2 != 0 else 'bg-white'
-        row_cols = f"<td class='p-3 border border-slate-300 font-semibold'>Jornada {jornada_num}</td>"
-        for team_name in sorted_teams:
-            cap_info = capitanes_jornada.get(team_name)
-            if cap_info:
-                capitan_name = cap_info.get('capitan', 'N/A')
-                is_sanction_trigger = cap_info.get('is_red_card', False)
+        # Sticky left para la columna de jornada con fondo explícito para evitar transparencia
+        row_content = f'<td class="p-1 md:p-2 border border-slate-300 font-bold {row_bg} sticky left-0 z-20 text-center text-[10px] md:text-sm">{j_num}</td>'
+        capitanes_j = {item['team_name']: item for item in capitanes_por_jornada[j_num]}
 
-                cell_classes = "p-3 border border-slate-300"
-                if is_sanction_trigger:
-                    cell_classes += " bg-yellow-300 font-semibold"
-
-                row_cols += f'<td class="{cell_classes}">{capitan_name}</td>'
+        for team in sorted_teams:
+            info = capitanes_j.get(team)
+            if info:
+                # Estilo si tiene roja (sanción por 3 amarillas/capitanías)
+                cell_class = "bg-yellow-100 text-yellow-800 font-bold" if info.get('is_red_card') else "text-slate-600"
+                row_content += f'<td class="p-1 md:p-2 border border-slate-300 text-center text-[9px] md:text-[11px] {cell_class}">{info["capitan"]}</td>'
             else:
-                row_cols += '<td class="p-3 border border-slate-300">-</td>'
-        body_rows += f"<tr class='{row_bg}'>{row_cols}</tr>"
+                row_content += f'<td class="p-1 md:p-2 border border-slate-300 bg-slate-100/30 text-slate-400 text-center">-</td>'
+
+        table_rows += f'<tr class="{row_bg} hover:bg-slate-100 transition-colors">{row_content}</tr>'
 
     return f"""
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>{header}</thead>
-            <tbody>{body_rows}</tbody>
+    <div class="overflow-x-auto rounded-lg shadow-sm border border-slate-300 max-h-[700px] overflow-y-auto">
+        <table class="w-full text-left border-collapse table-auto">
+            <thead class="bg-slate-100 text-slate-700 sticky top-0 z-40">
+                <tr>{table_header}</tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">{table_rows}</tbody>
         </table>
     </div>"""
 
@@ -691,13 +815,13 @@ def _generar_tabla_violaciones_html(violaciones_division):
     for team_name, lista_multas in violaciones_division.items():
         for m in lista_multas:
             lista_plana.append({'team': team_name, **m})
-    
+
     # Ordenar por jornada descendente
     lista_plana.sort(key=lambda x: x['jornada'], reverse=True)
 
     for item in lista_plana:
         table_rows += f"""
-        <tr class="bg-red-50 hover:bg-red-100 transition-colors">
+        <tr class="bg-red-50 hover:bg-red-100 transition-colores">
             <td class="p-3 border border-red-200 font-bold text-red-800 text-center">{item['jornada']}</td>
             <td class="p-3 border border-red-200 font-bold text-red-800">{item['team']}</td>
             <td class="p-3 border border-red-200 text-red-700">{item['jugador']}</td>
@@ -736,15 +860,42 @@ def generar_pagina_html_completa(datos_informe, output_path, current_matchday=No
         nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_clasificacion}">Clasificación {div_titulo}</a>'
         nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_sanciones}">Sanciones {div_titulo}</a>'
         nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_violaciones}">Alineaciones Indebidas {div_titulo}</a>'
-        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_capitanes}">Capitanes {div_titulo}</a>'
+        nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_capitanes}">Historial Capitanes {div_titulo}</a>'
         nav_links_html += f'<a href="#" class="nav-link block px-4 py-2 text-white hover:bg-slate-700 md:inline-block rounded-md transition-colors" data-target="{id_totales}">Multas Totales {div_titulo}</a>'
 
         contenido_html += f'<div id="{id_clasificacion}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Clasificación - {div_titulo}</h2> {_generar_tabla_clasificacion_html(div_data["clasificacion"])} </div>'
         contenido_html += f'<div id="{id_sanciones}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Sanciones Activas - {div_titulo}</h2> {_generar_tabla_sanciones_html(div_data["sanciones"])} </div>'
         contenido_html += f'<div id="{id_violaciones}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-red-700 border-b-2 border-red-500 pb-3 mb-6">Historial Alineaciones Indebidas - {div_titulo}</h2> {_generar_tabla_violaciones_html(div_data.get("violaciones_historico"))} </div>'
-        contenido_html += f'<div id="{id_capitanes}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Historial de Capitanes - {div_titulo}</h2> {_generar_tabla_capitanes_html(div_data["capitanes"], div_data["totales"].keys())} </div>'
+
+        # Tablas de capitanes por temporadas (mismo vista)
+        rounds_new = range(20, 100)
+        rounds_old = range(1, 20)
+
+        # Identificar equipos para cada periodo
+        equipos_new = set()
+        equipos_old = set()
+        for r_num, items in div_data["capitanes"].items():
+            if r_num in rounds_new:
+                for item in items: equipos_new.add(item['team_name'])
+            if r_num in rounds_old:
+                for item in items: equipos_old.add(item['team_name'])
+
+        contenido_html += f'<div id="{id_capitanes}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6 space-y-8">'
+        contenido_html += f'<h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-2">Historial Capitanes - {div_titulo}</h2>'
+
+        # Tabla Temporada Actual
+        if equipos_new:
+            contenido_html += f'<div><h3 class="text-lg font-semibold text-slate-600 mb-3 ml-1">Temporada Actual (20+)</h3>{_generar_tabla_capitanes_html(div_data["capitanes"], sorted(list(equipos_new)), rounds_new)}</div>'
+
+        # Tabla Temporada Invierno
+        if equipos_old:
+            contenido_html += f'<div class="pt-4"><h3 class="text-lg font-semibold text-slate-600 mb-3 ml-1">Temporada Invierno (1-19)</h3>{_generar_tabla_capitanes_html(div_data["capitanes"], sorted(list(equipos_old)), rounds_old)}</div>'
+
+        contenido_html += '</div>'
+
         contenido_html += f'<div id="{id_totales}" class="content-section p-4 md:p-6 bg-white rounded-lg shadow-md mb-6"> <h2 class="text-xl md:text-2xl font-bold text-center text-slate-700 border-b-2 border-sky-500 pb-3 mb-6">Multas Totales - {div_titulo}</h2> {_generar_tabla_multas_totales_html(div_data["totales"])} </div>'
 
+        # Dropdown solo para las multas por jornada
         nav_links_html += '<div class="relative dropdown-container">'
         nav_links_html += f'<button class="dropdown-btn block w-full text-left px-4 py-2 text-white hover:bg-slate-700 md:inline-block md:w-auto rounded-md transition-colors">Multas Jornada ({div_titulo}) &#9662;</button>'
         nav_links_html += '<div class="dropdown-content hidden md:absolute bg-white text-black rounded-md shadow-lg mt-2 py-1 z-20 w-full md:w-48 max-h-64 overflow-y-auto">'
@@ -873,7 +1024,7 @@ def _procesar_y_ordenar_clasificacion(datos_general, datos_teams, name_map={}):
     for equipo in ranking_general_list:
         nombre_equipo_api = equipo['name']
         nombre_equipo_canonico = name_map.get(nombre_equipo_api, nombre_equipo_api)
-        
+
         puntos_general = puntos_generales_dict.get(nombre_equipo_canonico, 0)
         puntos_jornada = equipo['points']
         comentario = ""
@@ -965,21 +1116,23 @@ def actualizar_hoja_capitanes(workbook, round_number, team_captains_list):
 def actualizar_capitanes_historico(workbook, rounds_map, payload_base, division_name, name_map={}):
     print(f"\n--- INICIANDO ACTUALIZACIÓN HISTÓRICA DE CAPITANES PARA {division_name.upper()} (EXCEL) ---")
     sorted_round_numbers = sorted(rounds_map.keys())
-    for round_number in sorted_round_numbers:
+    total_rounds = len(sorted_round_numbers)
+    for i, round_number in enumerate(sorted_round_numbers):
         round_id = rounds_map[round_number]
-        print(f"Procesando capitanes de la Jornada {round_number} para Excel...")
+        print_progress(i, total_rounds, prefix=f'Jornada {round_number}:', suffix='Excel...', length=40)
         payload_round = copy.deepcopy(payload_base)
         payload_round['query'].update({'roundNumber': round_id, 'championshipId': payload_base['query']['championshipId']})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
         if not datos_ronda or 'answer' not in datos_ronda or datos_ronda['answer'] == 'api.error.general':
-            print(f"     -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+            print(f"\n     -> Error: No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
             continue
         datos_ronda['query']['roundNumber'] = round_id
         team_captains = get_captains_for_round(payload_base, datos_ronda, name_map)
         if not team_captains:
-            print(f"     -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
+            print(f"\n     -> Advertencia: No se encontraron capitanes para la Jornada {round_number}.")
             continue
         actualizar_hoja_capitanes(workbook, round_number, team_captains)
+    print_progress(total_rounds, total_rounds, prefix='Finalizado:', suffix='Excel actualizado', length=40)
 
 # Procesa todos los datos de una ronda y calcula las multas correspondientes.
 def procesar_ronda_completa(datos_ronda, output_file, payload_base, name_map={}):
@@ -1066,9 +1219,10 @@ def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str
     multas_acumuladas = defaultdict(float)
     datos_jornadas = []
     sorted_rounds = sorted(rounds_map.keys())
-    for round_number in sorted_rounds:
+    total_rounds = len(sorted_rounds)
+    for i, round_number in enumerate(sorted_rounds):
         round_id = rounds_map[round_number]
-        print(f"Procesando Jornada {round_number}...")
+        print_progress(i, total_rounds, prefix=f'Jornada {round_number}:', suffix='Completado', length=40)
         payload_round = copy.deepcopy(payload_base)
         payload_round['query'].update({'roundNumber': round_id})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
@@ -1081,8 +1235,24 @@ def procesar_historico_jornadas(rounds_map, payload_base, name_map, division_str
                 for team, data in multas_de_la_jornada.items():
                     multas_acumuladas[team] += data.get('multa_total', 0.0)
         else:
-            print(f"No se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+            print(f"\nNo se pudieron obtener datos para la Jornada {round_number}. Saltando.")
+    print_progress(total_rounds, total_rounds, prefix='Finalizado:', suffix='Completado', length=40)
     return datos_jornadas, dict(multas_acumuladas)
+
+# Obtiene el capitán de un equipo desde un archivo local de resultados.
+def _extraer_capitan_de_archivo_local(round_number, team_name):
+    for div in ["primera", "segunda"]:
+        local_path = f"resultados/jornada_{round_number}_{div}.json"
+        if os.path.exists(local_path):
+            try:
+                with open(local_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    for match in data.get('Resultados por combate', []):
+                        if team_name in match:
+                            return match[team_name].get('Capitan', "N/A")
+            except Exception:
+                pass
+    return "N/A"
 
 # Recopila el historial de capitanes y alineaciones para procesar las sanciones de forma iterativa.
 def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_str, sanciones_existentes):
@@ -1095,8 +1265,22 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
     # Paso 1: Recopilar todos los datos históricos de capitanes.
     all_teams_data = {}
     print("Obteniendo datos históricos de todas las jornadas para análisis...")
-    for round_number in sorted_rounds:
+    total_rounds = len(sorted_rounds)
+    for i, round_number in enumerate(sorted_rounds):
         round_id = rounds_map[round_number]
+        print_progress(i, total_rounds, prefix=f'Jornada {round_number}:', suffix='Analizando...', length=40)
+
+        if str(round_id).startswith("LOCAL_"):
+            # Para rondas locales, buscamos en los JSON de resultados
+            for team_name in name_map.values():
+                capitan = _extraer_capitan_de_archivo_local(round_number, team_name)
+                # No tenemos lista de jugadores completa en local
+                all_teams_data.setdefault(team_name, {})[round_number] = {
+                    'capitan': capitan,
+                    'players': []
+                }
+            continue
+
         payload_round = copy.deepcopy(payload_base)
         payload_round['query'].update({'roundNumber': round_id})
         datos_ronda = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round)
@@ -1113,6 +1297,7 @@ def procesar_sanciones_y_capitanes(rounds_map, payload_base, name_map, division_
                 'capitan': capitan,
                 'players': [p['name'] for p in lineup_players]
             }
+    print_progress(total_rounds, total_rounds, prefix='Finalizado:', suffix='Análisis completo', length=40)
 
     # Paso 2: Procesar la lógica de sanciones de forma cronológica
     contador_capitanes = defaultdict(lambda: defaultdict(int))
@@ -1217,34 +1402,18 @@ def main():
     GITHUB_REPO = os.getenv("GITHUB_REPO")
 
     LOCAL_EXCEL_FILENAME = "SuperLiga Fuentmondo 25-26.xlsx"
-    TEAMS_1A = {
-        "1":"Galácticos de la noche FC", "2":"AL-CARRER F.C.", "3":"QUE BARBARIDAD FC",
-        "4":"Fuentino Pérez", "5":"CALAMARES CON TORRIJAS🦑🍞", "6":"CD Congelados",
-        "7":"THE LIONS", "8":"EL CHOLISMO FC", "9":"Real Fermín C.F.",
-        "10":"Real 🥚🥚 Bailarines 🪩F.C", "11":"MORRITOS F.C.", "12":"Poli Ejido CF",
-        "13":"Juaki la bomba", "14":"LA MARRANERA", "15":"Larios Limon FC",
-        "16":"PANAKOTA F.F.", "17":"Real Pezqueñines FC", "18":"LOS POKÉMON 🐭🟡🐭",
-        "19":"El Huracán CF", "20":"Lim Hijo de Puta"
-    }
-    TEAMS_2A = {
-      "1":"SANTA LUCIA FC", "2":"Osasuna N.S.R", "3":"Tetitas Colesterol . F.C",
-      "4":"Pollos sin cabeza 🐥🧄", "5":"Charo la   Picanta FC", "6":"Kostas Mariotas",
-      "7":"Real Pescados el Puerto Fc", "8":"Team pepino", "9":"🇧🇷Samba Rovinha 🇧🇷",
-      "10":"Banano Vallekano 🍌⚡", "11":"SICARIOS CF", "12":"Minabo De Kiev",
-      "13":"Todo por la camiseta 🇪🇸", "14":"parker f.c.", "15":"Molinardo fc",
-      "16":"Lazaroneta", "17":"ElBarto F.C", "18":"BANANEROS FC",
-      "19":"Morenetes de la Giralda 🍩", "20":"Jamon York F.C.", "21":"Elche pero Peor",
-      "22":"Motobetis a primera!", "23":"MTB Drink Team", "24":"Patejas"
-    }
-    
+
+    # Cargar equipos desde el archivo JSON
+    config_equipos = cargar_equipos(TEAMS_FILE)
+
     force_email = False
-    
+
     # Comprobar flag --email para envío directo
     if len(sys.argv) > 1 and sys.argv[1] == '--email':
         print("Modo 'Solo Email' detectado.")
         sanciones_cargadas = cargar_sanciones(SANCIONES_FILE)
         violaciones_cargadas = cargar_violaciones(VIOLACIONES_FILE)
-        
+
         if not any(sanciones_cargadas.values()) and not any(violaciones_cargadas.values()):
              print("No hay datos de sanciones o violaciones guardados para enviar.")
              return
@@ -1258,13 +1427,15 @@ def main():
         force_email = True
         print("Modo automático detectado. Actualizando localmente y forzando envío de email.")
     else:
-        modo = choose_save_option()
+        modo, force_refresh_choice = choose_save_option()
+        global FORCE_REFRESH
+        FORCE_REFRESH = force_refresh_choice
 
     if not modo:
         print("No se seleccionó ninguna opción. Finalizando el script.")
         return
 
-    
+
 
     sanciones_iniciales = cargar_sanciones(SANCIONES_FILE)
 
@@ -1283,30 +1454,120 @@ def main():
 
     rounds_data_1a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_1a))
     rounds_data_2a = llamar_api("https://api.futmondo.com/1/userteam/rounds", copy.deepcopy(payload_2a))
+
+    def descubrir_rondas_locales(division_str, existing_map):
+        """Escanea la carpeta resultados para encontrar jornadas que no están en el map de la API."""
+        try:
+            import re
+            files = os.listdir("resultados")
+            for f in files:
+                # Buscar patrón: jornada_X_division.json
+                match = re.search(rf"jornada_(\d+)_{division_str}\.json", f)
+                if match:
+                    num = int(match.group(1))
+                    if num not in existing_map:
+                        # Usamos el nombre del archivo como un "pseudo-id" ya que tenemos el archivo local
+                        existing_map[num] = f"LOCAL_{num}"
+            return existing_map
+        except Exception as e:
+            print(f"Error al buscar rondas locales para {division_str}: {e}")
+            return existing_map
+
     rounds_map_1a = procesar_rondas_api(rounds_data_1a.get('answer', []))
+    rounds_map_1a = descubrir_rondas_locales("primera", rounds_map_1a)
+
     rounds_map_2a = procesar_rondas_api(rounds_data_2a.get('answer', []))
-    if not rounds_map_1a or not rounds_map_2a:
-        print("Error: No se pudo obtener y procesar la lista de rondas de la API. Finalizando.")
-        return
+    rounds_map_2a = descubrir_rondas_locales("segunda", rounds_map_2a)
 
-    latest_round_id_1a = rounds_map_1a[max(rounds_map_1a.keys())]
-    payload_round_1a = copy.deepcopy(payload_1a)
-    payload_round_1a['query'].update({'roundNumber': latest_round_id_1a})
-    datos_ronda_1a = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round_1a)
-    latest_round_id_2a = rounds_map_2a[max(rounds_map_2a.keys())]
-    payload_round_2a = copy.deepcopy(payload_2a)
-    payload_round_2a['query'].update({'roundNumber': latest_round_id_2a})
-    datos_ronda_2a = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round_2a)
+    # Marcar jornadas para refresco forzoso (última y especiales con decimales)
+    global FORCED_ROUND_IDS
+    for r_map in [rounds_map_1a, rounds_map_2a]:
+        if r_map:
+            # Forzar solo la última de la API (no las locales)
+            api_rounds = [k for k, v in r_map.items() if not str(v).startswith("LOCAL_")]
+            if api_rounds:
+                FORCED_ROUND_IDS.add(r_map[max(api_rounds)])
+            # Forzar jornadas especiales (ej: 1.5)
+            for r_num, r_id in r_map.items():
+                if r_num % 1 != 0:
+                    FORCED_ROUND_IDS.add(r_id)
 
-    map_1a, map_2a = {}, {}
-    if datos_ronda_1a and 'answer' in datos_ronda_1a and 'ranking' in datos_ronda_1a['answer']:
-        round_ranking_1a = datos_ronda_1a['answer']['ranking']
-        if len(round_ranking_1a) >= len(TEAMS_1A):
-            map_1a = {round_ranking_1a[i]['name']: TEAMS_1A[str(i + 1)] for i in range(len(TEAMS_1A))}
-    if datos_ronda_2a and 'answer' in datos_ronda_2a and 'ranking' in datos_ronda_2a['answer']:
-        round_ranking_2a = datos_ronda_2a['answer']['ranking']
-        if len(round_ranking_2a) >= len(TEAMS_2A):
-            map_2a = {round_ranking_2a[i]['name']: TEAMS_2A[str(i + 1)] for i in range(len(TEAMS_2A))}
+    if not rounds_map_1a and not rounds_map_2a:
+        print("Aviso: No se encontraron rondas en ninguna división. Es normal al inicio de temporada.")
+        # Aun así, intentaremos sincronizar equipos.
+
+    # Obtener datos de equipos para sincronización (siempre disponible)
+    # ... (esto ya se hizo arriba al llamar a la API)
+
+    datos_ronda_1a = None
+    if rounds_map_1a:
+        latest_round_id_1a = rounds_map_1a[max(rounds_map_1a.keys())]
+        payload_round_1a = copy.deepcopy(payload_1a)
+        payload_round_1a['query'].update({'roundNumber': latest_round_id_1a})
+        datos_ronda_1a = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round_1a)
+
+    datos_ronda_2a = None
+    if rounds_map_2a:
+        latest_round_id_2a = rounds_map_2a[max(rounds_map_2a.keys())]
+        payload_round_2a = copy.deepcopy(payload_2a)
+        payload_round_2a['query'].update({'roundNumber': latest_round_id_2a})
+        datos_ronda_2a = llamar_api("https://api.futmondo.com/1/ranking/round", payload_round_2a)
+
+    # Sincronizar equipos de forma robusta
+    def sincronizar_division(div_key, datos_teams):
+        existing_div = config_equipos.get(div_key, {})
+        if not datos_teams or 'answer' not in datos_teams:
+            return False
+
+        teams_list = datos_teams['answer'].get('teams', [])
+        if not teams_list:
+            return False
+
+        updated = False
+        # Buscamos el índice más alto actual
+        max_idx = 0
+        for team_data in existing_div.values():
+            max_idx = max(max_idx, team_data.get('index', 0))
+
+        for t in teams_list:
+            team_id = t['id'] # El ID de futmondo es inmutable
+            api_name = t['teamname']
+
+            if team_id not in existing_div:
+                max_idx += 1
+                existing_div[team_id] = {
+                    "index": max_idx,
+                    "api_name": api_name,
+                    "display_name": api_name
+                }
+                print(f"  [+] Nuevo equipo detectado en {div_key}: {api_name} (Index: {max_idx})")
+                updated = True
+            else:
+                # Si el nombre ha cambiado en la API, lo actualizamos pero mantenemos el display_name
+                if existing_div[team_id].get('api_name') != api_name:
+                    existing_div[team_id]['api_name'] = api_name
+                    updated = True
+
+        config_equipos[div_key] = existing_div
+        return updated
+
+    updated = sincronizar_division("primera", datos_teams_1a)
+    updated |= sincronizar_division("segunda", datos_teams_2a)
+
+    if updated:
+        guardar_equipos(config_equipos, TEAMS_FILE)
+
+    # Crear los diccionarios necesarios para el resto del script
+    def preparar_mappings(div_key):
+        div_data = config_equipos.get(div_key, {})
+        # map: API_NAME (actual) -> DISPLAY_NAME (personalizado)
+        name_map = {data['api_name']: data['display_name'] for data in div_data.values()}
+        # TEAMS_DICT: INDEX -> DISPLAY_NAME (para Excel)
+        teams_dict = {str(data['index']): data['display_name'] for data in div_data.values()}
+        return name_map, teams_dict
+
+    map_1a, TEAMS_1A = preparar_mappings("primera")
+    map_2a, TEAMS_2A = preparar_mappings("segunda")
 
     clasificacion_1a = _procesar_y_ordenar_clasificacion(datos_general_1a, datos_teams_1a, map_1a)
     clasificacion_2a = _procesar_y_ordenar_clasificacion(datos_general_2a, datos_teams_2a, map_2a)
@@ -1317,7 +1578,10 @@ def main():
             workbook = None
             try:
                 if modo in ['local', 'local_auto']:
-                    workbook = openpyxl.load_workbook(LOCAL_EXCEL_FILENAME)
+                    if os.path.exists(LOCAL_EXCEL_FILENAME):
+                        workbook = openpyxl.load_workbook(LOCAL_EXCEL_FILENAME)
+                    else:
+                        print(f"⚠️ Aviso: No se encontró el archivo Excel '{LOCAL_EXCEL_FILENAME}'. Saltando actualización local.")
                 elif modo == 'onedrive':
                     access_token = get_access_token()
                     if not access_token: raise Exception("No se pudo obtener el token de acceso.")
@@ -1327,8 +1591,8 @@ def main():
 
                 if workbook:
                     actualizar_cabeceras_capitanes(workbook, TEAMS_1A, TEAMS_2A)
-                    actualizar_hoja_excel(workbook, clasificacion_1a, "Clasificación 1a DIV", 5, 2)
-                    actualizar_hoja_excel(workbook, clasificacion_2a, "Clasificación 2a DIV", 2, 3)
+                    # actualizar_hoja_excel(workbook, clasificacion_1a, "Clasificación 1a DIV", 5, 2)
+                    # actualizar_hoja_excel(workbook, clasificacion_2a, "Clasificación 2a DIV", 2, 3)
                     actualizar_capitanes_historico(workbook, rounds_map_1a, payload_1a, "1a División", map_1a)
                     actualizar_capitanes_historico(workbook, rounds_map_2a, payload_2a, "2a División", map_2a)
 
@@ -1359,10 +1623,10 @@ def main():
                 jornada_num = multa['jornada']
                 monto = multa['multa']
                 jugador = multa['jugador']
-                
+
                 # Actualizar totales
                 totales[team_name] = totales.get(team_name, 0.0) + monto
-                
+
                 # Actualizar desglose jornada
                 for jornada_data in datos_jornadas:
                     if jornada_data['numero'] == jornada_num:
@@ -1372,7 +1636,7 @@ def main():
                             desglose = team_data['desglose']
                             if 'alineacion_indebida' not in desglose:
                                 desglose['alineacion_indebida'] = {"cantidad": 0, "multa": 0.0, "jugadores": []}
-                            
+
                             desglose['alineacion_indebida']['cantidad'] += 1
                             desglose['alineacion_indebida']['multa'] += monto
                             desglose['alineacion_indebida']['jugadores'].append(jugador)
@@ -1387,8 +1651,8 @@ def main():
     guardar_violaciones(violaciones_totales, VIOLACIONES_FILE)
 
     if force_email:
-        print("\nModo automático: Enviando informe de sanciones...")
-        enviar_correo_sanciones(sanciones_finales, violaciones_totales)
+        print("\nModo automático: Enviando informe de sanciones (siempre habilitado)...")
+        enviar_correo_sanciones(sanciones_finales, violaciones_totales, force_send=True)
     else:
         nuevas_sanciones_totales = {"primera": nuevas_sanciones_1a, "segunda": nuevas_sanciones_2a}
         hay_nuevas_sanciones = any(nuevas_sanciones_totales["primera"].values()) or any(nuevas_sanciones_totales["segunda"].values())

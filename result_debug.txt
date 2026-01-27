@@ -1,0 +1,191 @@
+{
+    "Resultados por combate": [
+        {
+            "Combate": "Galácticos de la noche FC vs Lim Hijo de Puta",
+            "Galácticos de la noche FC": {
+                "Puntuacion": 43,
+                "Capitan": "Güler"
+            },
+            "Lim Hijo de Puta": {
+                "Puntuacion": 49,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Güler"
+            ]
+        },
+        {
+            "Combate": "AL-CARRER F.C. vs El Huracán CF",
+            "AL-CARRER F.C.": {
+                "Puntuacion": 69,
+                "Capitan": "Ferrán Torres "
+            },
+            "El Huracán CF": {
+                "Puntuacion": 66,
+                "Capitan": "Eyong"
+            },
+            "Jugadores repetidos": [
+                "Güler",
+                "Raba"
+            ]
+        },
+        {
+            "Combate": "QUE BARBARIDAD FC vs LOS POKÉMON 🐭🟡🐭",
+            "QUE BARBARIDAD FC": {
+                "Puntuacion": 67,
+                "Capitan": "Ferrán Torres "
+            },
+            "LOS POKÉMON 🐭🟡🐭": {
+                "Puntuacion": 53,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Raba",
+                "Garcés",
+                "Güler"
+            ]
+        },
+        {
+            "Combate": "Fuentino Pérez vs Real Pezqueñines FC",
+            "Fuentino Pérez": {
+                "Puntuacion": 57,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Real Pezqueñines FC": {
+                "Puntuacion": 45,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Nicolás Pépé"
+            ]
+        },
+        {
+            "Combate": "CALAMARES CON TORRIJAS🦑🍞 vs PANAKOTA F.F.",
+            "CALAMARES CON TORRIJAS🦑🍞": {
+                "Puntuacion": 42,
+                "Capitan": "Nicolás Pépé"
+            },
+            "PANAKOTA F.F.": {
+                "Puntuacion": 50,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Güler",
+                "Nicolás Pépé",
+                "Luiz Felipe"
+            ]
+        },
+        {
+            "Combate": "CD Congelados vs Larios Limon FC",
+            "CD Congelados": {
+                "Puntuacion": 40,
+                "Capitan": "Güler"
+            },
+            "Larios Limon FC": {
+                "Puntuacion": 55,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Raba",
+                "Jauregizar",
+                "Güler",
+                "Marcos Alonso"
+            ]
+        },
+        {
+            "Combate": "THE LIONS vs LA MARRANERA",
+            "THE LIONS": {
+                "Puntuacion": 45,
+                "Capitan": "Gerard Moreno"
+            },
+            "LA MARRANERA": {
+                "Puntuacion": 62,
+                "Capitan": "Ferrán Torres "
+            },
+            "Jugadores repetidos": [
+                "Raba",
+                "Güler",
+                "Garcés"
+            ]
+        },
+        {
+            "Combate": "EL CHOLISMO FC vs Juaki la bomba",
+            "EL CHOLISMO FC": {
+                "Puntuacion": 40,
+                "Capitan": "Oyarzabal"
+            },
+            "Juaki la bomba": {
+                "Puntuacion": 50,
+                "Capitan": "Güler"
+            },
+            "Jugadores repetidos": [
+                "Güler"
+            ]
+        },
+        {
+            "Combate": "Real Fermín C.F. vs Poli Ejido CF",
+            "Real Fermín C.F.": {
+                "Puntuacion": 37,
+                "Capitan": "Güler"
+            },
+            "Poli Ejido CF": {
+                "Puntuacion": 48,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Güler"
+            ]
+        },
+        {
+            "Combate": "Real 🥚🥚 Bailarines 🪩F.C vs MORRITOS F.C.",
+            "Real 🥚🥚 Bailarines 🪩F.C": {
+                "Puntuacion": 35,
+                "Capitan": "Nicolás Pépé"
+            },
+            "MORRITOS F.C.": {
+                "Puntuacion": 50,
+                "Capitan": "Nicolás Pépé"
+            },
+            "Jugadores repetidos": [
+                "Fermín",
+                "Nicolás Pépé"
+            ]
+        }
+    ],
+    "Peor Capitan": [
+        {
+            "nombre": "Gerard Moreno",
+            "puntos": 8,
+            "equipos": [
+                "THE LIONS"
+            ]
+        }
+    ],
+    "Peor Jugador": [
+        {
+            "nombre": "Jutglà",
+            "puntos": -1,
+            "equipos": [
+                "Galácticos de la noche FC",
+                "El Huracán CF"
+            ]
+        }
+    ],
+    "Los 3 peores equipos de la ronda": [
+        {
+            "posicion": 1,
+            "equipo": "Real 🥚🥚 Bailarines 🪩F.C",
+            "puntos": 35
+        },
+        {
+            "posicion": 2,
+            "equipo": "Real Fermín C.F.",
+            "puntos": 37
+        },
+        {
+            "posicion": 3,
+            "equipo": "CD Congelados",
+            "puntos": 40
+        }
+    ]
+}

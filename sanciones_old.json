@@ -1,0 +1,1458 @@
+{
+    "primera": {
+        "Galácticos de la noche FC": {
+            "Gerard Moreno": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "AL-CARRER F.C.": {
+            "Güler": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                }
+            ],
+            "Bellingham": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 17,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 2
+                }
+            ]
+        },
+        "QUE BARBARIDAD FC": {
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Fuentino Pérez": {
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "CALAMARES CON TORRIJAS🦑🍞": {},
+        "CD Congelados": {},
+        "THE LIONS": {
+            "Pedri": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 18,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 1
+                }
+            ]
+        },
+        "EL CHOLISMO FC": {
+            "Kubo": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 6,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 9,
+                    "jornada_fully_cleared": 12
+                }
+            ],
+            "Eyong": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 9,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 12,
+                    "jornada_fully_cleared": 15
+                }
+            ],
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 17,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 2
+                }
+            ]
+        },
+        "Real Fermín C.F.": {
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Real 🥚🥚 Bailarines 🪩F.C": {},
+        "MORRITOS F.C.": {},
+        "Poli Ejido CF": {
+            "Ferrán Torres ": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 7,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 10,
+                    "jornada_fully_cleared": 13
+                }
+            ]
+        },
+        "Juaki la bomba": {},
+        "LA MARRANERA": {
+            "Antony": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                }
+            ]
+        },
+        "Larios Limon FC": {
+            "Ayoze Pérez": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 18,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 1
+                }
+            ]
+        },
+        "PANAKOTA F.F.": {
+            "Ferrán Torres ": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                }
+            ]
+        },
+        "Real Pezqueñines FC": {},
+        "LOS POKÉMON 🐭🟡🐭": {
+            "Antony": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 13,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 16,
+                    "jornada_fully_cleared": 19
+                }
+            ],
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "El Huracán CF": {
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Lim Hijo de Puta": {
+            "Güler": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                }
+            ]
+        }
+    },
+    "segunda": {
+        "SANTA LUCIA FC": {},
+        "Osasuna N.S.R": {},
+        "Tetitas Colesterol . F.C": {},
+        "Pollos sin cabeza 🐥🧄": {
+            "Moleiro": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ],
+            "Kubo": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 17,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 2
+                }
+            ]
+        },
+        "Charo la   Picanta FC": {
+            "Lewandowski": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 16,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 16,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 16,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 19
+                }
+            ]
+        },
+        "Kostas Mariotas": {},
+        "Real Pescados el Puerto Fc": {},
+        "Team pepino": {
+            "Liso": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "🇧🇷Samba Rovinha 🇧🇷": {},
+        "Banano Vallekano 🍌⚡": {
+            "Lamine Yamal": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 14,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 14,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 14,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 14,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 14,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 14,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 17
+                }
+            ],
+            "Güler": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                }
+            ],
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "SICARIOS CF": {
+            "Ferrán Torres ": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 4,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 7,
+                    "jornada_fully_cleared": 10
+                }
+            ],
+            "Mbappé": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Minabo De Kiev": {
+            "Carlos Vicente": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 10,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 13,
+                    "jornada_fully_cleared": 16
+                }
+            ],
+            "Lewandowski": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ],
+            "Rodrygo": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 17,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 2
+                }
+            ]
+        },
+        "Todo por la camiseta 🇪🇸": {},
+        "parker f.c.": {},
+        "Molinardo fc": {
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Lazaroneta": {},
+        "ElBarto F.C": {
+            "Raphinha": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "BANANEROS FC": {
+            "Mbappé": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 17,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 2
+                }
+            ]
+        },
+        "Morenetes de la Giralda 🍩": {
+            "André Silva": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                }
+            ],
+            "Mbappé": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 17,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 2
+                }
+            ]
+        },
+        "Jamon York F.C.": {
+            "Pere Milla": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Elche pero Peor": {},
+        "Motobetis a primera!": {
+            "Roberto Fernández": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 19
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 11,
+                    "status": "completed",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 14,
+                    "jornada_fully_cleared": 17
+                }
+            ]
+        },
+        "MTB Drink Team": {
+            "Javi Guerra": [
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 15,
+                    "status": "captain_banned",
+                    "games_to_serve": 3,
+                    "games_served": 3,
+                    "jornada_completed": 18
+                },
+                {
+                    "type": "3_match_ban",
+                    "jornada_triggered": 19,
+                    "status": "active",
+                    "games_to_serve": 3,
+                    "games_served": 0
+                }
+            ]
+        },
+        "Patejas": {}
+    }
+}

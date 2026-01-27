@@ -1,0 +1,6 @@
+Loading .env environment 
+variables...
+  File "/home/blackman/Documents/fuentmondo/fuentmondo.py", line 269
+    payload_lineup = {
+                     ^
+SyntaxError: '{' was never closed

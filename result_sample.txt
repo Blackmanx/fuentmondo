@@ -1,0 +1,216 @@
+{
+    "Resultados por combate": [
+        {
+            "Combate": "Galácticos de la noche FC vs CD Congelados",
+            "Galácticos de la noche FC": {
+                "Puntuacion": 77,
+                "Capitan": "Gerard Moreno"
+            },
+            "CD Congelados": {
+                "Puntuacion": 60,
+                "Capitan": "Nico Williams"
+            },
+            "Jugadores repetidos": [
+                "Gerard Moreno"
+            ]
+        },
+        {
+            "Combate": "THE LIONS vs CALAMARES CON TORRIJAS🦑🍞",
+            "THE LIONS": {
+                "Puntuacion": 78,
+                "Capitan": "Dani Olmo"
+            },
+            "CALAMARES CON TORRIJAS🦑🍞": {
+                "Puntuacion": 59,
+                "Capitan": "Batalla"
+            },
+            "Jugadores repetidos": [
+                "Gerard Moreno",
+                "Baena"
+            ]
+        },
+        {
+            "Combate": "EL CHOLISMO FC vs Fuentino Pérez",
+            "EL CHOLISMO FC": {
+                "Puntuacion": 45,
+                "Capitan": "N/A"
+            },
+            "Fuentino Pérez": {
+                "Puntuacion": 73,
+                "Capitan": "Raphinha"
+            },
+            "Jugadores repetidos": [
+                "Raphinha"
+            ]
+        },
+        {
+            "Combate": "Real Fermín C.F. vs QUE BARBARIDAD FC",
+            "Real Fermín C.F.": {
+                "Puntuacion": 71,
+                "Capitan": "Raphinha"
+            },
+            "QUE BARBARIDAD FC": {
+                "Puntuacion": 59,
+                "Capitan": "Raphinha"
+            },
+            "Jugadores repetidos": [
+                "Raphinha",
+                "Baena",
+                "Batalla"
+            ]
+        },
+        {
+            "Combate": "Real 🥚🥚 Bailarines 🪩F.C vs AL-CARRER F.C.",
+            "Real 🥚🥚 Bailarines 🪩F.C": {
+                "Puntuacion": 77,
+                "Capitan": "Baena"
+            },
+            "AL-CARRER F.C.": {
+                "Puntuacion": 91,
+                "Capitan": "Raphinha"
+            },
+            "Jugadores repetidos": [
+                "Affengruber",
+                "Baena",
+                "Raphinha",
+                "Brais Méndez",
+                "Vlachodimos"
+            ]
+        },
+        {
+            "Combate": "MORRITOS F.C. vs Lim Hijo de Puta",
+            "MORRITOS F.C.": {
+                "Puntuacion": 47,
+                "Capitan": "N/A"
+            },
+            "Lim Hijo de Puta": {
+                "Puntuacion": 79,
+                "Capitan": "Baena"
+            },
+            "Jugadores repetidos": [
+                "Baena",
+                "Sivera"
+            ]
+        },
+        {
+            "Combate": "Poli Ejido CF vs El Huracán CF",
+            "Poli Ejido CF": {
+                "Puntuacion": 96,
+                "Capitan": "Raphinha"
+            },
+            "El Huracán CF": {
+                "Puntuacion": 77,
+                "Capitan": "Raphinha"
+            },
+            "Jugadores repetidos": [
+                "Raphinha",
+                "Baena",
+                "Escandell"
+            ]
+        },
+        {
+            "Combate": "Juaki la bomba vs LOS POKÉMON 🐭🟡🐭",
+            "Juaki la bomba": {
+                "Puntuacion": 72,
+                "Capitan": "Raphinha"
+            },
+            "LOS POKÉMON 🐭🟡🐭": {
+                "Puntuacion": 68,
+                "Capitan": "Raphinha"
+            },
+            "Jugadores repetidos": [
+                "Baena",
+                "Raphinha"
+            ]
+        },
+        {
+            "Combate": "LA MARRANERA vs Real Pezqueñines FC",
+            "LA MARRANERA": {
+                "Puntuacion": 76,
+                "Capitan": "Raphinha"
+            },
+            "Real Pezqueñines FC": {
+                "Puntuacion": 72,
+                "Capitan": "Gerard Moreno"
+            },
+            "Jugadores repetidos": [
+                "Baena",
+                "Catena",
+                "Fornals",
+                "Tchouameni",
+                "Gerard Moreno",
+                "Liso"
+            ]
+        },
+        {
+            "Combate": "Larios Limon FC vs PANAKOTA F.F.",
+            "Larios Limon FC": {
+                "Puntuacion": 71,
+                "Capitan": "Gerard Moreno"
+            },
+            "PANAKOTA F.F.": {
+                "Puntuacion": 56,
+                "Capitan": "N/A"
+            },
+            "Jugadores repetidos": [
+                "Raphinha",
+                "Güler",
+                "Baena"
+            ]
+        }
+    ],
+    "Peor Capitan": [
+        {
+            "nombre": "Nico Williams",
+            "puntos": 6,
+            "equipos": [
+                "CD Congelados"
+            ]
+        },
+        {
+            "nombre": "Batalla",
+            "puntos": 6,
+            "equipos": [
+                "CALAMARES CON TORRIJAS🦑🍞"
+            ]
+        }
+    ],
+    "Peor Jugador": [
+        {
+            "nombre": "Galarreta",
+            "puntos": -2,
+            "equipos": [
+                "THE LIONS"
+            ]
+        },
+        {
+            "nombre": "Ayoze Pérez",
+            "puntos": -2,
+            "equipos": [
+                "EL CHOLISMO FC",
+                "Real Fermín C.F.",
+                "Real 🥚🥚 Bailarines 🪩F.C",
+                "MORRITOS F.C.",
+                "Juaki la bomba",
+                "PANAKOTA F.F."
+            ]
+        }
+    ],
+    "Los 3 peores equipos de la ronda": [
+        {
+            "posicion": 1,
+            "equipo": "EL CHOLISMO FC",
+            "puntos": 45
+        },
+        {
+            "posicion": 2,
+            "equipo": "MORRITOS F.C.",
+            "puntos": 47
+        },
+        {
+            "posicion": 3,
+            "equipo": "PANAKOTA F.F.",
+            "puntos": 56
+        }
+    ]
+}

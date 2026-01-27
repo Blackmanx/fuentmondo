@@ -1,50 +1,226 @@
-[
-   {
-      "1":"Galácticos de la noche FC",
-      "2":"AL-CARRER F.C.",
-      "3":"QUE BARBARIDAD FC",
-      "4":"Fuentino Pérez",
-      "5":"CALAMARES CON TORRIJAS🦑🍞",
-      "6":"CD Congelados",
-      "7":"THE LIONS",
-      "8":"EL CHOLISMO FC",
-      "9":"Real Fermín C.F.",
-      "10":"Real 🥚🥚 Bailarines 🪩F.C",
-      "11":"MORRITOS F.C.",
-      "12":"Poli Ejido CF",
-      "13":"Juaki la bomba",
-      "14":"LA MARRANERA",
-      "15":"Larios Limon FC",
-      "16":"PANAKOTA F.F.",
-      "17":"Real Pezqueñines FC",
-      "18":"LOS POKÉMON 🐭🟡🐭",
-      "19":"El Huracán CF",
-      "20":"Lim Hijo de Puta"
-   },
-   {
-      "1":"SANTA LUCIA FC",
-      "2":"Osasuna N.S.R",
-      "3":"Tetitas Colesterol . F.C",
-      "4":"Pollos sin cabeza 🐥🧄",
-      "5":"Charo la  Picanta FC",
-      "6":"Kostas Mariotas",
-      "7":"Real Pescados el Puerto Fc",
-      "8":"Team pepino",
-      "9":"🇧🇷Samba Rovinha 🇧🇷",
-      "10":"Banano Vallekano 🍌⚡",
-      "11":"SICARIOS CF",
-      "12":"Minabo De Kiev",
-      "13":"Todo por la camiseta 🇪🇸",
-      "14":"parker f.c.",
-      "15":"Molinardo fc",
-      "16":"Lazaroneta",
-      "17":"ElBarto F.C",
-      "18":"BANANEROS FC",
-      "19":"Morenetes de la Giralda 🍩",
-      "20":"Jamon York F.C.",
-      "21":"Elche pero Peor",
-      "22":"Motobetis a primera!",
-      "23":"MTB Drink Team",
-      "24":"Patejas"
-   }
-]
+{
+    "primera": {
+        "659819c1439b5d5dd5aac71a": {
+            "index": 1,
+            "api_name": "LA MARRANERA",
+            "display_name": "LA MARRANERA"
+        },
+        "6598364d5448255ddcb2372b": {
+            "index": 2,
+            "api_name": "QUE BARBARIDAD FC",
+            "display_name": "QUE BARBARIDAD FC"
+        },
+        "69676a50ecbecf741b1b1b35": {
+            "index": 3,
+            "api_name": "SICARIOS CF",
+            "display_name": "SICARIOS CF"
+        },
+        "678933aa8f723857f242630e": {
+            "index": 4,
+            "api_name": "Larios Limon FC",
+            "display_name": "Larios Limon FC"
+        },
+        "659819cad220e05de3fdc8d6": {
+            "index": 5,
+            "api_name": "PANAKOTA F.F.",
+            "display_name": "PANAKOTA F.F."
+        },
+        "6598143aa03b3e5dec9d0d72": {
+            "index": 6,
+            "api_name": "Fuentino Pérez",
+            "display_name": "Fuentino Pérez"
+        },
+        "66b908351616a34d2df69e30": {
+            "index": 7,
+            "api_name": "Poli Ejido CF",
+            "display_name": "Poli Ejido CF"
+        },
+        "689a063ea38db7728f52ef47": {
+            "index": 8,
+            "api_name": "Huevitos Bailarines F.C",
+            "display_name": "Huevos bailarines F.C"
+        },
+        "689a04a6ae2f0472b136da48": {
+            "index": 9,
+            "api_name": "Cangrena F.C.",
+            "display_name": "Cangrena F.C."
+        },
+        "66b8cf999c97064d3aba216a": {
+            "index": 10,
+            "api_name": "CD Congelados",
+            "display_name": "CD Congelados"
+        },
+        "65981a0e3ce1595de614d7df": {
+            "index": 11,
+            "api_name": "Juaki la bomba",
+            "display_name": "Juaki la bomba"
+        },
+        "65981926d220e05de3fdc762": {
+            "index": 12,
+            "api_name": "El Huracán CF",
+            "display_name": "El Huracán CF"
+        },
+        "659821bba03b3e5dec9d47da": {
+            "index": 13,
+            "api_name": "Real Pezqueñines FC",
+            "display_name": "Real Pezqueñines FC"
+        },
+        "66b8fc496804c84d2ea1985d": {
+            "index": 14,
+            "api_name": "Galácticos de la noche FC",
+            "display_name": "Galácticos de la noche FC"
+        },
+        "6966bf7748ae763a4b307403": {
+            "index": 15,
+            "api_name": "Samba Rovinha 🇧🇷",
+            "display_name": "Samba Rovinha 🇧🇷"
+        },
+        "689a08363bfa9d72b3990bcf": {
+            "index": 16,
+            "api_name": "Real Fermín C.F.",
+            "display_name": "Real Fermín C.F."
+        },
+        "689a09caae2f0472b136e099": {
+            "index": 17,
+            "api_name": "THE LIONS",
+            "display_name": "THE LIONS"
+        },
+        "6966bfb67308783a30b44f9d": {
+            "index": 18,
+            "api_name": "BANANEROS FC",
+            "display_name": "BANANEROS FC"
+        },
+        "67892ad925a876580e83cde9": {
+            "index": 19,
+            "api_name": "CALAMARES CON TORRIJAS🦑🍞",
+            "display_name": "CALAMARES CON TORRIJAS🦑🍞"
+        },
+        "65983e16439b5d5dd5ab41a7": {
+            "index": 20,
+            "api_name": "AL-CARRER F.C.",
+            "display_name": "AL-CARRER F.C."
+        }
+    },
+    "segunda": {
+        "659822acd220e05de3fde489": {
+            "index": 1,
+            "api_name": "ElBarto F.C",
+            "display_name": "ElBarto F.C"
+        },
+        "66ba835a42b29e612f055565": {
+            "index": 2,
+            "api_name": "Todo por la camiseta 🇪🇸",
+            "display_name": "Todo por la camiseta 🇪🇸"
+        },
+        "65982664d220e05de3fded25": {
+            "index": 3,
+            "api_name": "Pollos sin cabeza 🐥🧄",
+            "display_name": "Pollos sin cabeza 🐥🧄"
+        },
+        "66b9e49f59ea9d61294406c4": {
+            "index": 4,
+            "api_name": "parker f.c.",
+            "display_name": "parker f.c."
+        },
+        "66b9c6cad8573f61516f8afb": {
+            "index": 5,
+            "api_name": "Lazaroneta",
+            "display_name": "Lazaroneta"
+        },
+        "6598259c439b5d5dd5aae9ee": {
+            "index": 6,
+            "api_name": "Real Pescados el Puerto Fc",
+            "display_name": "Real Pescados el Puerto Fc"
+        },
+        "65983a1833be465dc281d42d": {
+            "index": 7,
+            "api_name": "Minabo De Kiev",
+            "display_name": "Minabo De Kiev"
+        },
+        "66b9c5d20edfaa6140f45f75": {
+            "index": 8,
+            "api_name": "Motobetis a primera!",
+            "display_name": "Motobetis a primera!"
+        },
+        "659824c63ce1595de614f7fb": {
+            "index": 9,
+            "api_name": "Osasuna N.S.R",
+            "display_name": "Osasuna N.S.R"
+        },
+        "65995074a01e7562816f2af0": {
+            "index": 10,
+            "api_name": "Charo la  Picanta FC",
+            "display_name": "Charo la  Picanta FC"
+        },
+        "67892af51c22815820555e0a": {
+            "index": 11,
+            "api_name": "Kostas Mariotas",
+            "display_name": "Kostas Mariotas"
+        },
+        "689a20eeae2f0472b13704c8": {
+            "index": 12,
+            "api_name": "Banano Vallekano 🍌⚡",
+            "display_name": "Banano Vallekano 🍌⚡"
+        },
+        "6966be960ca2b03a4e81dd63": {
+            "index": 13,
+            "api_name": "MORRITOS F.C.",
+            "display_name": "MORRITOS F.C."
+        },
+        "65982c3675bd5d5dc817e498": {
+            "index": 14,
+            "api_name": "SANTA LUCIA FC",
+            "display_name": "SANTA LUCIA FC"
+        },
+        "69675c4d21a17374298e6de2": {
+            "index": 15,
+            "api_name": "EL CHOLISMO FC",
+            "display_name": "EL CHOLISMO FC"
+        },
+        "65982865439b5d5dd5aaf2d5": {
+            "index": 16,
+            "api_name": "Morenetes de la Giralda 🍩",
+            "display_name": "Morenetes de la Giralda 🍩"
+        },
+        "689a1bc300a093729ca566b4": {
+            "index": 17,
+            "api_name": "Patejas",
+            "display_name": "Patejas"
+        },
+        "659836b2439b5d5dd5ab2274": {
+            "index": 18,
+            "api_name": "Jamon York F.C.",
+            "display_name": "Jamon York F.C."
+        },
+        "659825225448255ddcb2033f": {
+            "index": 19,
+            "api_name": "Tetitas Colesterol . F.C",
+            "display_name": "Tetitas Colesterol . F.C"
+        },
+        "659827f7fffa555dce587198": {
+            "index": 20,
+            "api_name": "MTB Drink Team",
+            "display_name": "MTB Drink Team"
+        },
+        "65982460d220e05de3fde7e7": {
+            "index": 21,
+            "api_name": "Elche pero Peor",
+            "display_name": "Elche pero Peor"
+        },
+        "659824ea75bd5d5dc817cebd": {
+            "index": 22,
+            "api_name": "Molinardo fc",
+            "display_name": "Molinardo fc"
+        },
+        "659838fa5448255ddcb23b71": {
+            "index": 23,
+            "api_name": "Team pepino",
+            "display_name": "Team pepino"
+        },
+        "6966c11742a2e83a24a6210b": {
+            "index": 24,
+            "api_name": "LOS POKÉMON 🟡🐭🟡",
+            "display_name": "LOS POKÉMON 🟡🐭🟡"
+        }
+    }
+}
